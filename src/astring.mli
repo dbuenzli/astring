@@ -378,7 +378,7 @@ module String : sig
   (** [cuts sep s] is the list of all substrings of [s] that are
       delimited by matches of the non empty seperator string
       [sep]. Empty substrings are omitted in the list if [empty] is
-      [true] (defaults to [false]).
+      [false] (defaults to [true]).
 
       Matching separators in [s] starts from the beginning of [s]
       ([rev] is [false], default) or the end ([rev] is [true]). Once
@@ -397,7 +397,7 @@ module String : sig
   (** [fields ~empty ~is_sep s] is the list of substrings made of
       bytes that are not separated by bytes for which [is_sep] is
       [true].  Empty substrings are omitted in the list if [empty] is
-      [true] (defaults to [false]). [is_sep] defaults to
+      [false] (defaults to [true]). [is_sep] defaults to
       {!Char.Ascii.is_white}. *)
 
   (** {1:traverse Traversing strings} *)
@@ -454,8 +454,8 @@ module String : sig
       a {e base} string.
 
       The subsequence is defined by a {e start} and a {e stop}
-      {{!idxpos}position}. The latter is always smaller or equal to
-      the former. When both positions are equal the substring is {e
+      {{!idxpos}position}. The former is always smaller or equal to
+      the latter. When both positions are equal the substring is {e
       empty}. Note that for a given base string there are as many
       empty substrings as there are positions in the string.
 
@@ -463,8 +463,7 @@ module String : sig
       zero-based {{!idxpos}indices and positions}.
 
       Substrings can be used to quickly devise parsers for your data,
-      see {{!examples}examples}.
- *)
+      see {{!examples}examples}. *)
   module Sub : sig
 
     (** {1 Substrings} *)
