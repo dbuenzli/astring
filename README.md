@@ -1,4 +1,4 @@
-Astring — alternative String module for OCaml
+Astring — Alternative String module for OCaml
 -------------------------------------------------------------------------------
 Release %%VERSION%%
 
