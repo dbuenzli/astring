@@ -547,7 +547,7 @@ module Set = struct
     ()
 
   let err_empty () = invalid_arg "empty set"
-  let err_absent s ss = invalid_arg (strf "%s not in set %a" s pp ss)
+  let err_absent s ss = invalid_arg (strf "%a not in set %a" pp_string s pp ss)
 
   let get_min_elt ss = try min_elt ss with Not_found -> err_empty ()
   let min_elt ss = try Some (min_elt ss) with Not_found -> None
@@ -568,7 +568,7 @@ module Map = struct
   include Map.Make (String)
 
   let err_empty () = invalid_arg "empty map"
-  let err_absent s = invalid_arg (strf "%s is not bound in map" s)
+  let err_absent s = invalid_arg (strf "%a is not bound in map" pp_string s)
 
   let get_min_binding m = try min_binding m with Not_found -> err_empty ()
   let min_binding m = try Some (min_binding m) with Not_found -> None
