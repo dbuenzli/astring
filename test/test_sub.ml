@@ -658,7 +658,6 @@ let span = test "String.Sub.span" @@ fun () ->
   eq (String.Sub.span ~sat:Char.Ascii.is_white empty) (empty, empty);
   ()
 
-
 let min_span = test "String.Sub.min_span" @@ fun () ->
   let base = "0ab cd0" in
   let eq = eq_option ~eq:eq_pair ~pp:pp_pair in
@@ -694,6 +693,12 @@ let min_span = test "String.Sub.min_span" @@ fun () ->
     None;
   eq (String.Sub.min_span ~min:0 ~max:0 empty) (Some (empty, empty));
   eq (String.Sub.min_span ~min:1 ~max:1 empty) None;
+  ()
+
+let drop = test "String.Sub.drop" @@ fun () ->
+  eqs (String.Sub.drop ~sat:(Char.equal 'a') (String.sub "aabbaa")) "bbaa";
+  eqs (String.Sub.drop ~rev:true ~sat:(Char.equal 'a') (String.sub "aabbaa"))
+    "aabb";
   ()
 
 (* Extracting substrings *)
@@ -1208,6 +1213,7 @@ let suite = suite "Base String functions"
       find_sub;
       span;
       min_span;
+      drop;
       with_pos_range;
       with_pos_len;
       with_index_range;

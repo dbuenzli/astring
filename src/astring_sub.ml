@@ -396,7 +396,8 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
     loop start
   end
 
-let drop ?rev ?max ?sat s = snd (span ?rev ?max ?sat s)
+let drop ?(rev = false) ?max ?sat s =
+  if rev then fst (span ~rev ?max ?sat s) else snd (span ~rev ?max ?sat s)
 
 (* Extracting substrings *)
 

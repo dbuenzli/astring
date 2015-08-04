@@ -696,7 +696,11 @@ module String : sig
         [min] > [max]. *)
 
     val drop : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> sub -> sub
-    (** [drop ~rev ~max ~sat s] is [snd (span ~rev ~max ~sat s)]. *)
+    (**
+       {ul
+       {- [drop ~rev:false ~max ~sat s] is [snd (span ~rev:false ~max ~sat s)]}
+       {- [drop ~rev:true ~max ~sat s] is [fst (span ~rev:true ~max ~sat s)]}}
+    *)
 
     (** {1:extract Extracting substrings}
 
