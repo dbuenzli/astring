@@ -468,7 +468,7 @@ let fcut ~sep:(sep, sep_start, sep_stop) (s, start, stop) =
     then check_sep i 1
     else scan (i + 1)
   in
-  scan 0
+  scan start
 
 let rcut ~sep:(sep, sep_start, sep_stop) (s, start, stop) =
   let sep_len = sep_stop - sep_start in

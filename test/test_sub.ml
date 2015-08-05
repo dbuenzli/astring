@@ -917,6 +917,8 @@ let cut = test "String.Sub.cut" @@ fun () ->
   eqo (cut "aa" "aaaaa") (Some ("", "aaa";));
   eqo (cut "aa" "aaaaaa") (Some ("", "aaaa"));
   eqo (cut ~sep:"ab" "faaaa") None;
+  eqo (String.Sub.cut ~sep:(String.sub "/") (String.sub ~start:2 "a/b/c"))
+    (Some ("b", "c"));
   let rev = true in
   app_invalid ~pp:ppp (cut ~rev ~sep:"") "";
   app_invalid ~pp:ppp (cut ~rev ~sep:"") "123";
@@ -949,6 +951,8 @@ let cut = test "String.Sub.cut" @@ fun () ->
   eqo (cut ~rev ~sep:"aa" "aaaaa") (Some ("aaa", "";));
   eqo (cut ~rev ~sep:"aa" "aaaaaa") (Some ("aaaa", ""));
   eqo (cut ~rev ~sep:"ab" "afaaaa") None;
+  eqo (String.Sub.cut ~sep:(String.sub "/") (String.sub ~stop:3 "a/b/c"))
+    (Some ("a", "b"));
   ()
 
 let cuts = test "String.Sub.cuts" @@ fun () ->
