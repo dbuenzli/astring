@@ -6,11 +6,11 @@
 
 open Astring;;
 
-#install_printer Char.pp_char;;
-#install_printer String.pp_string;;
-#install_printer String.Sub.pp_string;;
-#install_printer String.Set.pp;;
-#install_printer String.Map.pp_string_map;;
+#install_printer Char.dump;;
+#install_printer String.dump;;
+#install_printer String.Sub.dump;;
+#install_printer String.Set.dump;;
+#install_printer String.Map.dump_string_map;;
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.
