@@ -1023,7 +1023,7 @@ v}
         untouched. *)
 
     val dump : Format.formatter -> set -> unit
-    (** [dump ppf ss] prints an unspecified representatino of [ss] on
+    (** [dump ppf ss] prints an unspecified representation of [ss] on
         [ppf]. *)
   end
 
