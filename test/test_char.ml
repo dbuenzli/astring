@@ -7,9 +7,9 @@
 open Testing
 open Astring
 
-let eq = eq ~pp:Char.pp_char
-let eq_opt = eq_option ~pp:Char.pp_char ~eq:Char.equal
-let invalid = app_invalid ~pp:Char.pp_char
+let eq = eq ~pp:Char.dump
+let eq_opt = eq_option ~pp:Char.dump ~eq:Char.equal
+let invalid = app_invalid ~pp:Char.dump
 
 let misc = test "Char.{of_byte,of_int,to_int}" @@ fun () ->
   invalid Char.of_byte (-1);
@@ -17,7 +17,7 @@ let misc = test "Char.{of_byte,of_int,to_int}" @@ fun () ->
   eq_opt (Char.of_int (-1)) None;
   eq_opt (Char.of_int 256) None;
   for i = 0 to 0xFF do
-    let of_int = Char.of_int $ pp_int @-> ret_get_option Char.pp_char in
+    let of_int = Char.of_int $ pp_int @-> ret_get_option Char.dump in
     eq_int (Char.to_int (of_int i)) i
   done;
   ()

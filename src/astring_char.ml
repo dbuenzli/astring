@@ -77,7 +77,7 @@ end
 (* Pretty printing *)
 
 let pp = Format.pp_print_char
-let pp_char ppf c =
+let dump ppf c =
   Format.pp_print_char ppf '\'';
   Format.pp_print_string ppf (Ascii.escape_char c);
   Format.pp_print_char ppf '\'';

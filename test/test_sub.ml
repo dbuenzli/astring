@@ -8,18 +8,16 @@ open Testing
 open Astring
 
 let pp_str_pair ppf (a, b) =
-  Format.fprintf ppf "@[<1>(%a,%a)@]"
-    String.pp_string a String.pp_string b
+  Format.fprintf ppf "@[<1>(%a,%a)@]" String.dump a String.dump b
 
 let pp_pair ppf (a, b) =
-  Format.fprintf ppf "@[<1>(%a,%a)@]"
-    String.Sub.pp_string a String.Sub.pp_string b
+  Format.fprintf ppf "@[<1>(%a,%a)@]" String.Sub.dump a String.Sub.dump b
 
 let eq_pair (l0, r0) (l1, r1) =
   String.Sub.equal l0 l1 && String.Sub.equal r0 r1
 
-let eq_sub = eq ~eq:String.Sub.equal ~pp:String.Sub.pp_string
-let eq_sub_raw = eq ~eq:String.Sub.equal ~pp:String.Sub.pp_raw
+let eq_sub = eq ~eq:String.Sub.equal ~pp:String.Sub.dump
+let eq_sub_raw = eq ~eq:String.Sub.equal ~pp:String.Sub.dump_raw
 
 let eqs sub s = eq_str (String.Sub.to_string sub) s
 let eqb sub s = eq_str (String.Sub.base_string sub) s
@@ -200,7 +198,7 @@ let reduce = test "String.Sub.reduce" @@ fun () ->
   ()
 
 let extent = test "String.Sub.extent" @@ fun () ->
-  app_invalid ~pp:String.Sub.pp_raw
+  app_invalid ~pp:String.Sub.dump_raw
     String.Sub.(extent (v "a")) (String.Sub.(v "b"));
   let abcd = "abcd" in
   let e0 = String.Sub.v ~start:0 ~stop:0 abcd in
@@ -265,7 +263,7 @@ let overlap = test "String.Sub.overlap" @@ fun () ->
   let empty_pos sub pos = match sub with
   | None -> fail "no sub" | Some sub -> empty_pos sub pos
   in
-  app_invalid ~pp:String.Sub.pp_raw
+  app_invalid ~pp:String.Sub.dump_raw
     String.Sub.(extent (v "a")) (String.Sub.(v "b"));
   let abcd = "abcd" in
   let e0 = String.Sub.v ~start:0 ~stop:0 abcd in
@@ -581,7 +579,7 @@ let find = test "String.Sub.find" @@ fun () ->
   let b0 = String.sub ~start:1 ~stop:2 abcbd in
   let b1 = String.sub ~start:3 ~stop:4 abcbd in
   let abcbd = String.sub abcbd in
-  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.pp_raw in
+  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.dump_raw in
   eq (String.Sub.find (fun c -> c = 'b') empty) None;
   eq (String.Sub.find ~rev:true (fun c -> c = 'b') empty) None;
   eq (String.Sub.find (fun c -> c = 'b') a) None;
@@ -601,7 +599,7 @@ let find_sub = test "String.Sub.find_sub" @@ fun () ->
   let b0 = String.sub ~start:1 ~stop:2 abcbd in
   let b1 = String.sub ~start:3 ~stop:4 abcbd in
   let abcbd = String.sub abcbd in
-  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.pp_raw in
+  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.dump_raw in
   eq (String.Sub.find_sub ~sub:ab empty) None;
   eq (String.Sub.find_sub ~rev:true ~sub:ab empty) None;
   eq (String.Sub.find_sub ~sub:(String.sub "") empty) (Some empty);
@@ -956,10 +954,10 @@ let cut = test "String.Sub.cut" @@ fun () ->
   ()
 
 let cuts = test "String.Sub.cuts" @@ fun () ->
-  let ppl = pp_list String.Sub.pp_string in
+  let ppl = pp_list String.Sub.dump in
   let eql subs l =
     let subs = List.map String.Sub.to_string subs in
-    eq_list ~eq:String.equal ~pp:String.pp_string subs l
+    eq_list ~eq:String.equal ~pp:String.dump subs l
   in
   let s s =
     String.sub ~start:1 ~stop:(1 + (String.length s)) (strf "\x00%s\x00" s)
@@ -1106,7 +1104,7 @@ let cuts = test "String.Sub.cuts" @@ fun () ->
 let fields = test "String.Sub.fields" @@ fun () ->
   let eql subs l =
     let subs = List.map String.Sub.to_string subs in
-    eq_list ~eq:String.equal ~pp:String.pp_string subs l
+    eq_list ~eq:String.equal ~pp:String.dump subs l
   in
   let s s =
     String.sub ~start:1 ~stop:(1 + (String.length s)) (strf "\x00%s\x00" s)

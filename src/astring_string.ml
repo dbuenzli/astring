@@ -524,7 +524,7 @@ end
 (* Pretty printing *)
 
 let pp = Format.pp_print_string
-let pp_string ppf s =
+let dump ppf s =
   Format.pp_print_char ppf '"';
   Format.pp_print_string ppf (Ascii.escape_string s);
   Format.pp_print_char ppf '"';
@@ -535,19 +535,28 @@ let pp_string ppf s =
 module Set = struct
   include Set.Make (String)
 
-  let pp ppf ss =
-    let pp_elt elt not_first =
-      if not_first then Format.fprintf ppf ",@ ";
-      Format.fprintf ppf "%a" pp_string elt;
-      true
+  let pp ?(sep = Format.pp_print_cut) pp_elt ppf ss =
+    let pp_elt elt is_first =
+      if is_first then () else Format.fprintf ppf "@ ";
+      Format.fprintf ppf "%a" pp_elt elt; false
+    in
+    ignore (fold pp_elt ss true)
+
+  let dump_str = dump
+  let dump ppf ss =
+    let pp_elt elt is_first =
+      if is_first then () else Format.fprintf ppf "@ ";
+      Format.fprintf ppf "%a" dump elt;
+      false
     in
     Format.fprintf ppf "@[<1>{";
-    ignore (fold pp_elt ss false);
+    ignore (fold pp_elt ss true);
     Format.fprintf ppf "}@]";
     ()
 
   let err_empty () = invalid_arg "empty set"
-  let err_absent s ss = invalid_arg (strf "%a not in set %a" pp_string s pp ss)
+  let err_absent s ss =
+    invalid_arg (strf "%a not in set %a" dump_str s dump ss)
 
   let get_min_elt ss = try min_elt ss with Not_found -> err_empty ()
   let min_elt ss = try Some (min_elt ss) with Not_found -> None
@@ -568,7 +577,7 @@ module Map = struct
   include Map.Make (String)
 
   let err_empty () = invalid_arg "empty map"
-  let err_absent s = invalid_arg (strf "%a is not bound in map" pp_string s)
+  let err_absent s = invalid_arg (strf "%a is not bound in map" dump s)
 
   let get_min_binding m = try min_binding m with Not_found -> err_empty ()
   let min_binding m = try Some (min_binding m) with Not_found -> None
@@ -586,18 +595,26 @@ module Map = struct
 
   let of_list bs = List.fold_left (fun m (k,v) -> add k v m) empty bs
 
-  let pp pp_v ppf m =
-    let pp_binding k v not_first =
-      if not_first then Format.fprintf ppf ",@ ";
-      Format.fprintf ppf "@[<1>(%a,@ %a)@]" pp_string k pp_v v;
-      true
+  let pp ?sep:(pp_sep = Format.pp_print_cut) pp_binding ppf (m : 'a t) =
+    let pp_binding k v is_first =
+      if is_first then () else pp_sep ppf ();
+      pp_binding ppf (k, v); false
+    in
+    ignore (fold pp_binding m true)
+
+  let dump_str = dump
+  let dump pp_v ppf m =
+    let pp_binding k v is_first =
+      if is_first then () else Format.fprintf ppf "@ ";
+      Format.fprintf ppf "@[<1>(@[%a@],@ @[%a@])@]" dump k pp_v v;
+      false
     in
     Format.fprintf ppf "@[<1>{";
-    ignore (fold pp_binding m false);
+    ignore (fold pp_binding m true);
     Format.fprintf ppf "}@]";
     ()
 
-  let pp_string_map ppf m = pp pp_string ppf m
+  let dump_string_map ppf m = dump dump_str ppf m
 end
 
 type set = Set.t

@@ -8,7 +8,7 @@ open Testing
 open Astring
 
 let pp_pair ppf (a, b) =
-  Format.fprintf ppf "@[<1>(%a,%a)@]" String.pp_string a String.pp_string b
+  Format.fprintf ppf "@[<1>(%a,%a)@]" String.dump a String.dump b
 
 let misc = test "Misc. base functions" @@ fun () ->
   eq_str String.empty  "";
@@ -608,8 +608,8 @@ let cut = test "String.cut" @@ fun () ->
   ()
 
 let cuts = test "String.cuts" @@ fun () ->
-  let ppl = pp_list String.pp_string in
-  let eql = eq_list ~eq:String.equal ~pp:String.pp_string in
+  let ppl = pp_list String.dump in
+  let eql = eq_list ~eq:String.equal ~pp:String.dump in
   let no_alloc ?rev ~sep s =
     eq_bool (List.hd (String.cuts ?rev ~sep s) == s) true
   in
@@ -754,7 +754,7 @@ let cuts = test "String.cuts" @@ fun () ->
   ()
 
 let fields = test "String.fields" @@ fun () ->
-  let eql = eq_list ~eq:String.equal ~pp:String.pp_string in
+  let eql = eq_list ~eq:String.equal ~pp:String.dump in
   let no_alloc ?empty ?is_sep s =
     eq_bool (List.hd (String.fields ?empty ?is_sep s) == s) true
   in

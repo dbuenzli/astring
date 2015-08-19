@@ -171,8 +171,8 @@ module Char : sig
   val pp : Format.formatter -> char -> unit
   (** [pp ppf c] prints [c] on [ppf]. *)
 
-  val pp_char : Format.formatter -> char -> unit
-  (** [pp_char ppf c] prints [c] as a syntactically valid OCaml
+  val dump : Format.formatter -> char -> unit
+  (** [dump ppf c] prints [c] as a syntactically valid OCaml
       char on [ppf] using {!Ascii.escape_char} *)
 end
 
@@ -761,16 +761,16 @@ module String : sig
 
     (** {1:pp Pretty printing} *)
 
-    val pp_raw : Format.formatter -> sub -> unit
-    (** [pp_raw ppf s] prints an unspecified raw representation
-        of [s] on ppf. *)
-
     val pp : Format.formatter -> sub -> unit
     (** [pp ppf s] prints [s]'s bytes on [ppf]. *)
 
-    val pp_string : Format.formatter -> sub -> unit
-    (** [pp_string ppf s] prints [s] as a syntactically valid OCaml string on
-        [ppf] using {!Ascii.escape_string}. *)
+    val dump : Format.formatter -> sub -> unit
+    (** [dump ppf s] prints [s] as a syntactically valid OCaml string
+        on [ppf] using {!Ascii.escape_string}. *)
+
+    val dump_raw : Format.formatter -> sub -> unit
+    (** [dump_raw ppf s] prints an unspecified raw internal
+        representation of [s] on ppf. *)
 
     (** {1:convert OCaml base type conversions} *)
 
@@ -963,8 +963,8 @@ v}
   val pp : Format.formatter -> string -> unit
   (** [pp ppf s] prints [s]'s bytes on [ppf]. *)
 
-  val pp_string : Format.formatter -> string -> unit
-  (** [pp_string ppf s] prints [s] as a syntactically valid OCaml string on
+  val dump : Format.formatter -> string -> unit
+  (** [dump ppf s] prints [s] as a syntactically valid OCaml string on
       [ppf] using {!Ascii.escape_string}. *)
 
   (** {1 String sets and maps} *)
@@ -1013,9 +1013,18 @@ v}
     val of_list : string list -> set
     (** [of_list ss] is a set from the list [ss]. *)
 
-    val pp : Format.formatter -> set -> unit
-    (** [pp ppf ss] prints an unspecified representation of [ss]
-        on [ppf]. *)
+    val pp : ?sep:(Format.formatter -> unit -> unit) ->
+      (Format.formatter -> string -> unit) ->
+        Format.formatter -> set -> unit
+    (** [pp ~sep pp_elt ppf ss] formats the elements of [ss] on
+        [ppf]. Each element is formatted with [pp_elt] and elements
+        are separated by [~sep] (defaults to
+        {!Format.pp_print_cut}. If the set is empty leaves [ppf]
+        untouched. *)
+
+    val dump : Format.formatter -> set -> unit
+    (** [dump ppf ss] prints an unspecified representatino of [ss] on
+        [ppf]. *)
   end
 
   type +'a map
@@ -1066,14 +1075,23 @@ v}
     (** [of_list bs] is [List.fold_left (fun m (k, v) -> add k v m) empty
         bs]. *)
 
-    val pp : (Format.formatter -> 'a -> unit) -> Format.formatter ->
+    val pp : ?sep:(Format.formatter -> unit -> unit) ->
+      (Format.formatter -> string * 'a -> unit) -> Format.formatter ->
       'a map -> unit
-    (** [pp ppf pp_v m] prints an unspecified representation of [m] on
-        [ppf] using [pp_v] to prints the map codomain elements. *)
+    (** [pp ~sep pp_binding ppf m] formats the bindings of [m] on
+        [ppf]. Each binding is formatted with [pp_binding] and
+        bindings are separated by [sep] (defaults to
+        {!Format.pp_print_cut}). If the map is empty leaves [ppf]
+        untouched. *)
 
-    val pp_string_map : Format.formatter -> string map -> unit
-    (** [pp ppf m] prints an unspecified representation of [m]
-        on [ppf]. *)
+    val dump : (Format.formatter -> 'a -> unit) -> Format.formatter ->
+      'a map -> unit
+    (** [dump pp_v ppf m] prints an unspecified representation of [m] on
+        [ppf] using [pp_v] to print the map codomain elements. *)
+
+    val dump_string_map : Format.formatter -> string map -> unit
+    (** [dump_string_map ppf m] prints an unspecified representation of the
+        string map [m] on [ppf]. *)
   end
 
   (** {1:unique Uniqueness} *)

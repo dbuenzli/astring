@@ -599,13 +599,13 @@ let fold_right f (s, start, stop) acc =
 let pp ppf s =
   Format.pp_print_string ppf (to_string s)
 
-let pp_string ppf s =
+let dump ppf s =
   Format.pp_print_char ppf '"';
   Format.pp_print_string ppf (Astring_escape.escape_string (to_string s));
   Format.pp_print_char ppf '"';
   ()
 
-let pp_raw ppf (s, start, stop) =
+let dump_raw ppf (s, start, stop) =
   Format.fprintf ppf "@[<1>(@[<1>(base@ \"%s\")@]@ @[<1>(start@ %d)@]@ \
                          @[(stop@ %d)@])@]"
     (Astring_escape.escape_string s) start stop
