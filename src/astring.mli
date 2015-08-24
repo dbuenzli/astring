@@ -97,7 +97,7 @@ module Char : sig
         \[[0x41];[0x5A]\]. *)
 
     val is_lower : char -> bool
-    (** [is_lower c] is [true] iff [c] is an US-ASCII uppercase
+    (** [is_lower c] is [true] iff [c] is an US-ASCII lowercase
         letter ['a'] ... ['z'], that is a byte in the range
         \[[0x61];[0x7A]\]. *)
 
@@ -802,7 +802,7 @@ module String : sig
         {!Nativeint.of_string}. *)
 
     val to_nativeint : sub -> nativeint option
-    (** [to_int] is an [nativeint] from [s], if any. Relies on
+    (** [to_nativeint] is an [nativeint] from [s], if any. Relies on
         {!Nativeint.to_string}. *)
 
     val of_int32 : int32 -> sub
@@ -810,7 +810,7 @@ module String : sig
         {!Int32.of_string}. *)
 
     val to_int32 : sub -> int32 option
-    (** [to_int] is an [int32] from [s], if any. Relies on
+    (** [to_int32] is an [int32] from [s], if any. Relies on
         {!Int32.to_string}. *)
 
     val of_int64 : int64 -> sub
@@ -818,7 +818,7 @@ module String : sig
         {!Int64.of_string}. *)
 
     val to_int64 : sub -> int64 option
-    (** [to_int] is an [int64] from [s], if any. Relies on
+    (** [to_int64] is an [int64] from [s], if any. Relies on
         {!Int64.to_string}. *)
 
     val of_float : float -> sub
@@ -826,7 +826,7 @@ module String : sig
         {!Pervasives.string_of_float}. *)
 
     val to_float : sub -> float option
-    (** [to_float s] is a [flaot] from [s], if any. Relies
+    (** [to_float s] is a [float] from [s], if any. Relies
         on {!Pervasives.float_of_string}. *)
 
     (** {1:fig Substring stretching graphical guide}
