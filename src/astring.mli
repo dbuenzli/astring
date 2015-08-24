@@ -82,7 +82,7 @@ module Char : sig
         that is a byte in the range \[[0x00];[0x7F]\]. *)
 
     val is_digit : char -> bool
-    (** [is_valid c] is [true] iff [c] is an US-ASCII digit
+    (** [is_digit c] is [true] iff [c] is an US-ASCII digit
         ['0'] ... ['9'], that is a byte in the range \[[0x30];[0x39]\]. *)
 
     val is_hex_digit : char -> bool
@@ -97,9 +97,9 @@ module Char : sig
         \[[0x41];[0x5A]\]. *)
 
     val is_lower : char -> bool
-    (** [is_upper c] is [true] iff [c] is an US-ASCII uppercase
+    (** [is_lower c] is [true] iff [c] is an US-ASCII uppercase
         letter ['a'] ... ['z'], that is a byte in the range
-        \[[0x41];[0x5A]\]. *)
+        \[[0x61];[0x7A]\]. *)
 
     val is_letter : char -> bool
     (** [is_letter c] is [is_lower c || is_upper c]. *)
@@ -110,8 +110,8 @@ module Char : sig
     val is_white : char -> bool
     (** [is_white c] is [true] iff [c] is an US-ASCII white space
         character, that is one of space [' '] ([0x20]), tab ['\t']
-        ([0x09]), newline ['\n'] ([0x0A]), vertical tab ([x0B]), form
-        feed ([x0C]), carriage return ['\r'] ([0x0D]). *)
+        ([0x09]), newline ['\n'] ([0x0A]), vertical tab ([0x0B]), form
+        feed ([0x0C]), carriage return ['\r'] ([0x0D]). *)
 
     val is_blank : char -> bool
     (** [is_blank c] is [true] iff [c] is an US-ASCII blank character,
@@ -128,7 +128,7 @@ module Char : sig
     (** [is_control c] is [true] iff [c] is an US-ASCII control character,
         that is a byte in the range \[[0x00];[0x1F]\] or [0x7F]. *)
 
-    (** {1 Casing tranforms} *)
+    (** {1 Casing transforms} *)
 
     val uppercase : char -> char
     (** [uppercase c] is [c] with US-ASCII characters ['a'] to ['z'] mapped
@@ -147,7 +147,7 @@ module Char : sig
         {- Any byte in the ranges \[[0x00];[0x1F]\] and
            \[[0x7F];[0xFF]\] escaped by an {e hexadecimal} ["\xHH"]
            escape with [H] a capital hexadecimal number. These bytes
-           are the US-ASCII control characters an non US-ASCII bytes.}
+           are the US-ASCII control characters and non US-ASCII bytes.}
         {- Any other byte is left unchanged.}}
 
         Use {!String.Ascii.unescape} to unescape. *)
@@ -161,7 +161,7 @@ module Char : sig
         {- ['\n'] ([0x0A]) escaped to the sequence ["\\n"] ([0x5C,0x6E]).}
         {- ['\r'] ([0x0D]) escaped to the sequence ["\\r"] ([0x5C,0x72]).}
         {- ['\\''] ([0x27]) escaped to the sequence ["\\'"] ([0x5C,0x27]).}
-        {- Other bytes follows the rules of {!escape}}}
+        {- Other bytes follow the rules of {!escape}}}
 
         Use {!String.Ascii.unescape_string} to unescape. *)
   end
@@ -310,7 +310,7 @@ module String : sig
       in the same order. *)
 
   val keep_map : (char -> char option) -> string -> string
-  (** [keep f s] is the string made of the bytes of [s] as mapped by
+  (** [keep_map f s] is the string made of the bytes of [s] as mapped by
       [f], in order. *)
 
   (** {1:extract Extracting substrings}
@@ -327,8 +327,8 @@ module String : sig
       positions} of [s] or if [stop < start]. *)
 
   val with_pos_len : ?start:int -> ?len:int -> string -> string
-  (** [with_pos_len ~first ~len] is the substring of [s] that
-      contains the bytes from positions [start] (defaults to [0])
+  (** [with_pos_len ~start ~len] is the substring of [s] that
+      contains the bytes from position [start] (defaults to [0])
       to [start + len] (defaults to [String.length s - start]).
 
       @raise Invalid_argument if [start] or [start + len]
@@ -350,7 +350,7 @@ module String : sig
       If [start] or [stop] are negative they are subtracted from the
       [String.length s] position. This means that [-1] denotes the
       penultimate position of the string. If [start] or [stop] are
-      invalid positions in [s] they are clipped to the neareast
+      invalid positions in [s] they are clipped to the nearest
       valid position. If [stop < start] an empty string is returned.
 
       These properties make [slice] an expressive function. For
@@ -376,7 +376,7 @@ module String : sig
 
   val cuts : ?rev:bool -> ?empty:bool -> sep:string -> string -> string list
   (** [cuts sep s] is the list of all substrings of [s] that are
-      delimited by matches of the non empty seperator string
+      delimited by matches of the non empty separator string
       [sep]. Empty substrings are omitted in the list if [empty] is
       [false] (defaults to [true]).
 
@@ -459,7 +459,7 @@ module String : sig
       empty}. Note that for a given base string there are as many
       empty substrings as there are positions in the string.
 
-      Like in strings, we refer to the the contents of a substring using
+      Like in strings, we refer to the contents of a substring using
       zero-based {{!idxpos}indices and positions}.
 
       Substrings can be used to quickly devise parsers for your data,
@@ -570,7 +570,7 @@ module String : sig
         @raise Invalid_argument if [max] is negative. *)
 
     val extent : sub -> sub -> sub
-    (** [extent s s'] is the smallest subtring that includes all the
+    (** [extent s s'] is the smallest substring that includes all the
         positions of [s] and [s'].
 
         @raise Invalid_argument if [s] and [s'] are not on the same base
@@ -607,7 +607,7 @@ module String : sig
 
     val is_infix : affix:sub -> sub -> bool
     (** [is_infix] is like {!String.is_infix}. Only bytes
-        are compared [affix] can be on a different base. *)
+        are compared, [affix] can be on a different base. *)
 
     val is_suffix : affix:sub -> sub -> bool
     (** [is_suffix] is like {!String.is_suffix}. Only bytes
@@ -663,7 +663,7 @@ module String : sig
     (** [span ~rev ~max ~sat s] is [(l, r)] where:
         {ul
         {- if [rev] is [false] (default), [l] is at most [max] consecutive
-           [sat] statisfying bytes of [s] located after [start s] and
+           [sat] satisfying bytes of [s] located after [start s] and
            [r] the remaining bytes.}
         {- if [rev] is [true], [r] is at most [max] consecutive [sat]
            satisfying bytes of [s] located before [stop s] and [l] the
@@ -680,7 +680,7 @@ module String : sig
     (** [min_span ~rev ~min ~max ~sat s] is [Some (l, r)] where:
         {ul
         {- if [rev] is [false] (default), [l] is at least [min] and at
-           most [max] consecutive [sat] statisfying bytes of [s]
+           most [max] consecutive [sat] satisfying bytes of [s]
            located after [start s] and [r] the remaining bytes.}
         {- if [rev] is [true], [r] is at least [min] and at most [max]
            consecutive [sat] satisfying bytes of [s] located before [stop s]
@@ -731,7 +731,7 @@ module String : sig
     (** [cut] is like {!String.cut}. [sep] can be on a different base. *)
 
     val cuts : ?rev:bool -> ?empty:bool -> sep:sub -> sub -> sub list
-    (** [cut] is like {!String.cuts}. [sep] can be on a different base. *)
+    (** [cuts] is like {!String.cuts}. [sep] can be on a different base. *)
 
     val fields : ?empty:bool -> ?is_sep:(char -> bool) -> sub -> sub list
     (** [fields] is like {!String.fields}. *)
@@ -790,7 +790,7 @@ module String : sig
         {!Pervasives.bool_of_string}. *)
 
     val of_int : int -> sub
-    (** [of_int i] is a string respresentation for [i]. Relies on
+    (** [of_int i] is a string representation for [i]. Relies on
         {!Pervasives.string_of_int}. *)
 
     val to_int : sub -> int option
@@ -798,7 +798,7 @@ module String : sig
         {!Pervasives.int_of_string}. *)
 
     val of_nativeint : nativeint -> sub
-    (** [of_nativeint i] is a string respresentation for [i]. Relies on
+    (** [of_nativeint i] is a string representation for [i]. Relies on
         {!Nativeint.of_string}. *)
 
     val to_nativeint : sub -> nativeint option
@@ -806,7 +806,7 @@ module String : sig
         {!Nativeint.to_string}. *)
 
     val of_int32 : int32 -> sub
-    (** [of_int32 i] is a string respresentation for [i]. Relies on
+    (** [of_int32 i] is a string representation for [i]. Relies on
         {!Int32.of_string}. *)
 
     val to_int32 : sub -> int32 option
@@ -814,7 +814,7 @@ module String : sig
         {!Int32.to_string}. *)
 
     val of_int64 : int64 -> sub
-    (** [of_int64 i] is a string respresentation for [i]. Relies on
+    (** [of_int64 i] is a string representation for [i]. Relies on
         {!Int64.of_string}. *)
 
     val to_int64 : sub -> int64 option
@@ -929,7 +929,7 @@ v}
         {- Any byte in the ranges \[[0x00];[0x1F]\] and
            \[[0x7F];[0xFF]\] escaped by an {e hexadecimal} ["\xHH"]
            escape with [H] a capital hexadecimal number. These bytes
-           are the US-ASCII control characters an non US-ASCII bytes.}
+           are the US-ASCII control characters and non US-ASCII bytes.}
         {- Any other byte is left unchanged.}} *)
 
     val unescape : string -> string option
@@ -986,7 +986,7 @@ v}
     (** Exception safe {!Set.S.min_elt}. *)
 
     val get_min_elt : set -> string
-    (** [get_min_let] is like {!min_elt} but @raise Invalid_argument
+    (** [get_min_elt] is like {!min_elt} but @raise Invalid_argument
         on the empty set. *)
 
     val max_elt : set -> string option
@@ -1051,7 +1051,7 @@ v}
     (** Exception safe {!Map.S.max_binding}. *)
 
     val get_max_binding : 'a map -> string * 'a
-    (** [get_min_binding] is like {!max_binding} but @raise Invalid_argument
+    (** [get_max_binding] is like {!max_binding} but @raise Invalid_argument
         on the empty map. *)
 
     val choose : 'a map -> (string * 'a) option
@@ -1104,7 +1104,7 @@ v}
     ?suff:(int -> string, Format.formatter, unit, string) format4 ->
     string -> string
   (** [make_unique_in set ~suff elt] is a string that does not belong
-      to [set].  If [elt] in not in [set] then this is [elt] itself
+      to [set].  If [elt] is not in [set] then this is [elt] itself
       otherwise it is a string defined by {!strf}[ ("%s" ^^ suff) elt
       d] where [d] is a positive number starting from [1]. [suff]
       defaults to ["~%d"].
@@ -1130,7 +1130,7 @@ v}
       {!Pervasives.bool_of_string}. *)
 
   val of_int : int -> string
-  (** [of_int i] is a string respresentation for [i]. Relies on
+  (** [of_int i] is a string representation for [i]. Relies on
       {!Pervasives.string_of_int}. *)
 
   val to_int : string -> int option
@@ -1138,27 +1138,27 @@ v}
       {!Pervasives.int_of_string}. *)
 
   val of_nativeint : nativeint -> string
-  (** [of_nativeint i] is a string respresentation for [i]. Relies on
+  (** [of_nativeint i] is a string representation for [i]. Relies on
       {!Nativeint.of_string}. *)
 
   val to_nativeint : string -> nativeint option
-  (** [to_int] is an [nativeint] from [s], if any. Relies on
+  (** [to_nativeint] is an [nativeint] from [s], if any. Relies on
       {!Nativeint.to_string}. *)
 
   val of_int32 : int32 -> string
-  (** [of_int32 i] is a string respresentation for [i]. Relies on
+  (** [of_int32 i] is a string representation for [i]. Relies on
       {!Int32.of_string}. *)
 
   val to_int32 : string -> int32 option
-  (** [to_int] is an [int32] from [s], if any. Relies on
+  (** [to_int32] is an [int32] from [s], if any. Relies on
       {!Int32.to_string}. *)
 
   val of_int64 : int64 -> string
-  (** [of_int64 i] is a string respresentation for [i]. Relies on
+  (** [of_int64 i] is a string representation for [i]. Relies on
       {!Int64.of_string}. *)
 
   val to_int64 : string -> int64 option
-  (** [to_int] is an [int64] from [s], if any. Relies on
+  (** [to_int64] is an [int64] from [s], if any. Relies on
       {!Int64.to_string}. *)
 
   val of_float : float -> string
@@ -1166,7 +1166,7 @@ v}
       {!Pervasives.string_of_float}. *)
 
   val to_float : string -> float option
-  (** [to_float s] is a [flaot] from [s], if any. Relies
+  (** [to_float s] is a [float] from [s], if any. Relies
       on {!Pervasives.float_of_string}. *)
 
 
@@ -1224,7 +1224,7 @@ end
 
     {1:port Porting guide}
 
-    Opening [Astring] a the top of a module that uses the OCaml
+    Opening [Astring] at the top of a module that uses the OCaml
     standard library in a project that compiles with [-safe-string]
     will either result in typing errors or compatible behaviour except
     for uses of the {!String.trim} function, {{!porttrim}see below}.
@@ -1277,7 +1277,7 @@ let std_ocaml_trim s =
 
    {1:examples Examples}
 
-   We show how to use {{!String.Sub}subtrings} to quickly devise LL(1)
+   We show how to use {{!String.Sub}substrings} to quickly devise LL(1)
    parsers. To keep it simple we do not implement precise error
    report, but note that it would be easy to add it by replacing the
    [raise Exit] calls by an exception with more information: we have
@@ -1332,7 +1332,7 @@ environments of the form:
 key0 = value0 key2 = value2 ...]}
 To support values with spaces, values can be quoted between two
 ['"'] characters. If they are quoted then any ["\\\""] subsequence
-([0x2F],[0x22]) is is interpreted as the character ['"'] ([0x22]) and
+([0x2F],[0x22]) is interpreted as the character ['"'] ([0x22]) and
 ["\\\\"] ([0x2F],[0x2F]) is interpreted as the character ['\\']
 ([0x22]).
 
