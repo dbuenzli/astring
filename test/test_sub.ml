@@ -508,6 +508,17 @@ let exists = test "String.Sub.exists" @@ fun () ->
   eq_bool (String.Sub.exists (fun c -> Char.to_int c < 0x34) s654) false;
   ()
 
+let equal_base = test "String.Sub.equal_base" @@ fun () ->
+  let abcd = "abcd" in
+  let a = String.sub_with_index_range ~first:0 ~last:0 abcd in
+  let ab = String.sub_with_index_range ~first:0 ~last:1 abcd in
+  let abce = String.sub_with_index_range ~first:0 ~last:1 "abce" in
+  eq_bool (String.Sub.equal_base a ab) true;
+  eq_bool (String.Sub.equal_base ab a) true;
+  eq_bool (String.Sub.equal_base abce a) false;
+  eq_bool (String.Sub.equal_base abce a) false;
+  ()
+
 let equal_bytes = test "String.Sub.equal_bytes" @@ fun () ->
   let a = String.sub_with_index_range ~first:0 ~last:0 "abcd" in
   let ab = String.sub_with_index_range ~first:0 ~last:1 "abcd" in
@@ -1207,6 +1218,7 @@ let suite = suite "Base String functions"
       is_suffix;
       for_all;
       exists;
+      equal_base;
       equal_bytes;
       compare_bytes;
       equal;

@@ -619,6 +619,10 @@ module String : sig
     val exists : (char -> bool) -> sub -> bool
     (** [exists] is like {!String.exists} on the substring. *)
 
+    val equal_base : sub -> sub -> bool
+    (** [equal_base s s'] is [true] iff the substrings [s] and [s']
+        have the same base. *)
+
     val equal_bytes : sub -> sub -> bool
     (** [equal_bytes s s'] is [true] iff the substrings [s] and [s'] have
         exactly the same bytes. The substrings can be on a different

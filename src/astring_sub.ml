@@ -236,6 +236,8 @@ let is_suffix ~affix:(affix, _, astop as affix_sub) (s, _, sstop as s_sub) =
 let for_all sat (s, start, stop) = Astring_base.for_all sat s ~start ~stop
 let exists sat (s, start, stop) = Astring_base.exists sat s ~start ~stop
 
+let equal_base (s0, _, _) (s1, _, _) = s0 == s1
+
 let equal_bytes (s0, start0, stop0) (s1, start1, stop1) =
   if s0 == s1 && start0 = start1 && stop0 = stop1 then true else
   let len0 = stop0 - start0 in
