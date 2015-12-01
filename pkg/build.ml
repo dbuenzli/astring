@@ -3,7 +3,7 @@
 #use "topkg.ml";;
 
 let () =
-  Pkg.describe "astring" ~builder:`OCamlbuild [
+  Pkg.describe "astring" ~builder:(`OCamlbuild []) [
     Pkg.lib "pkg/META";
     Pkg.lib ~exts:Exts.module_library "src/astring";
     Pkg.lib "src/astring_top_init.ml";
