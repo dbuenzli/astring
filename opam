@@ -8,7 +8,8 @@ bug-reports: "https://github.com/dbuenzli/astring/issues"
 tags: [ "string" "org:erratique" ]
 license: "BSD-3-Clause"
 available: [ ocaml-version >= "4.01.0"]
-depends: [ "ocamlfind" ]
+depends: [ "ocamlfind" {build}
+           "ocamlbuild" {build} ]
 build:
 [
   [ "ocaml" "pkg/git.ml" ]
