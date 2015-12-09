@@ -578,6 +578,48 @@ let span = test "String.span" @@ fun () ->
     String.empty;
   ()
 
+let min_span = test "String.min_span" @@ fun () ->
+  let eq_pair (l0, r0) (l1, r1) = String.equal l0 l1 && String.equal r0 r1 in
+  let no_alloc_left_empty f s = match f s with
+  | None -> eq_bool false true
+  | Some (l, r) -> eq_bool (l == String.empty && r == s) true
+  in
+  let no_alloc_right_empty f s = match f s with
+  | None -> eq_bool false true
+  | Some (l, r) -> eq_bool (l == s && r == String.empty) true
+  in
+  let eq = eq_option ~eq:eq_pair ~pp:pp_pair in
+  let invalid = app_invalid ~pp:(pp_option pp_pair) in
+  invalid (fun s -> String.min_span ~min:2 ~max:1 s) "ab_cd";
+  invalid (fun s -> String.min_span ~min:(-2) ~max:1 s) "ab_cd";
+  invalid (fun s -> String.min_span ~min:0 ~max:(-1) s) "ab_cd";
+  eq (String.min_span ~min:1 ~sat:Char.Ascii.is_white "ab_cd")
+    None;
+  eq (String.min_span ~min:2 ~sat:Char.Ascii.is_letter "ab_cd")
+    (Some ("ab", "_cd"));
+  eq (String.min_span ~min:1 ~max:1 ~sat:Char.Ascii.is_letter "ab_cd")
+    (Some ("a", "b_cd"));
+  eq (String.min_span ~min:3 ~sat:Char.Ascii.is_letter "ab_cd")
+    None;
+  eq (String.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_white "ab_cd")
+    None;
+  no_alloc_right_empty
+    (String.min_span ~min:1 ~sat:Char.Ascii.is_letter) "abcd";
+  eq (String.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_letter "abcd")
+    (Some ("", "abcd"));
+  no_alloc_left_empty
+    (String.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_letter) "abcd";
+  eq (String.min_span ~rev:true ~min:2 ~sat:Char.Ascii.is_letter "ab_cd")
+    (Some ("ab_", "cd"));
+  eq (String.min_span ~rev:true ~min:1 ~max:1 ~sat:Char.Ascii.is_letter
+        "ab_cd") (Some ("ab_c", "d"));
+  eq (String.min_span ~rev:true ~min:3 ~sat:Char.Ascii.is_letter "ab_cd")
+    None;
+  eq (String.min_span ~min:0 ~max:0 String.empty) (Some (String.empty,
+                                                         String.empty));
+  eq (String.min_span ~min:1 ~max:1 String.empty) None;
+  ()
+
 let cut = test "String.cut" @@ fun () ->
   let ppp = pp_option pp_pair in
   let eqo = eq_option ~eq:(=) ~pp:pp_pair in
@@ -1043,6 +1085,7 @@ let suite = suite "String functions"
       slice;
       trim;
       span;
+      min_span;
       cut;
       cuts;
       fields;

@@ -284,6 +284,45 @@ let span ?(rev = false) ?max ?(sat = fun _ -> true) s =
     loop 0
   end
 
+let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) s =
+  if min < 0 then invalid_arg (Astring_base.err_neg_min min) else
+  let len = string_length s in
+  let max_idx = len - 1 in
+  if rev then begin
+    let min_idx = match max with
+    | None -> 0
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max when min > max -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max -> let i = len - max in if i < 0 then 0 else i
+    in
+    let need_idx = len - min - 1 in
+    let rec loop i =
+      if i >= min_idx && sat (unsafe_get s i) then loop (i - 1) else
+      if i > need_idx then None else
+      if i = -1 then Some (empty, s) else
+      if i = len then Some (s, empty) else
+      let cut = i + 1 in
+      Some (unsafe_string_sub s 0 cut, unsafe_string_sub s cut (len - cut))
+    in
+    loop max_idx
+  end else begin
+    let max_idx = match max with
+    | None -> max_idx
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max when min > max -> invalid_arg (Astring_base.err_min_max min max)
+    | Some max -> let i = max - 1 in if i > max_idx then max_idx else i
+    in
+    let need_idx = min in
+    let rec loop i =
+      if i <= max_idx && sat (unsafe_get s i) then loop (i + 1) else
+      if i < need_idx then None else
+      if i = 0 then Some (empty, s) else
+      if i = len then Some (s, empty) else
+      Some (unsafe_string_sub s 0 i, unsafe_string_sub s i (len - i))
+    in
+    loop 0
+end
+
 let trim ?(drop = Astring_char.Ascii.is_white) s =
   let max_pos = length s in
   if max_pos = 0 then s else

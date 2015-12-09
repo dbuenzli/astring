@@ -376,6 +376,26 @@ module String : sig
 
         @raise Invalid_argument if [max] is negative. *)
 
+  val min_span : ?rev:bool -> min:int -> ?max:int -> ?sat:(char -> bool) ->
+    string -> (string * string) option
+  (** [min_span ~rev ~min ~max ~sat s] is [Some (l, r)] where:
+        {ul
+        {- if [rev] is [false] (default), [l] is at least [min] and at
+           most [max] consecutive [sat] satisfying initial bytes of [s]
+           and [r] the remaining bytes.}
+        {- if [rev] is [true], [r] is at least [min] and at most [max]
+           consecutive [sat] satisfying final bytes of [s] and [l] the
+           remaining bytes.}}
+        If [max] is unspecified the span is unlimited. [None] is returned if
+        no [min] bytes satisfied [sat], note that if [min] is [0] [None] is
+        never returned and we get the behaviour of {!span}. [sat] defaults to
+        [fun _ -> true].
+
+        The invariant [l ^ r = s] holds.
+
+        @raise Invalid_argument if [min] or [max] are negative or if
+        [min] > [max]. *)
+
   val cut : ?rev:bool -> sep:string -> string -> (string * string) option
   (** [cut ~sep s] is either the pair [Some (l,r)] of the two
       (possibly empty) substrings of [s] that are delimited by the
