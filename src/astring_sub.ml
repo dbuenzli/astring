@@ -336,8 +336,7 @@ let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
     | Some max -> let i = stop - max in if i < start then start else i
     in
     let rec loop i =
-      if i < min_idx then (s, start, i + 1), (s, i + 1, stop) else
-      if sat (sunsafe_get s i) then loop (i - 1) else
+      if i >= min_idx && sat (sunsafe_get s i) then loop (i - 1 ) else
       if i = max_idx then sub, (s, stop, stop) else
       (s, start, i + 1), (s, i + 1, stop)
     in
@@ -349,8 +348,7 @@ let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
     | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
     in
     let rec loop i =
-      if i > max_idx then (s, start, i), (s, i, stop) else
-      if sat (sunsafe_get s i) then loop (i + 1) else
+      if i <= max_idx && sat (sunsafe_get s i) then loop (i + 1) else
       if i = start then (s, start, start), sub else
       (s, start, i), (s, i, stop)
     in
@@ -369,12 +367,9 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
     in
     let need_idx = stop - min - 1 in
     let rec loop i =
-      if i < min_idx
-      then (if i > need_idx then None else
-            Some ((s, start, i + 1), (s, i + 1, stop)))
-      else if sat (sunsafe_get s i) then loop (i - 1)
-      else if i > need_idx then None
-      else Some ((s, start, i + 1), (s, i + 1, stop))
+      if i >= min_idx && sat (sunsafe_get s i) then loop (i - 1) else
+      if i > need_idx then None else
+      Some ((s, start, i + 1), (s, i + 1, stop))
     in
     loop max_idx
   end else begin
@@ -386,11 +381,9 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
     in
     let need_idx = start + min in
     let rec loop i =
-      if i > max_idx
-      then (if i < need_idx then None else Some ((s, start, i), (s, i, stop)))
-      else if sat (sunsafe_get s i) then loop (i + 1)
-      else if i < need_idx then None
-      else Some ((s, start, i), (s, i, stop))
+      if i <= max_idx && sat (sunsafe_get s i) then loop (i + 1) else
+      if i < need_idx then None else
+      Some ((s, start, i), (s, i, stop))
     in
     loop start
   end
