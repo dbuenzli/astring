@@ -673,7 +673,7 @@ module String : sig
            satisfying bytes of [s] located before [stop s] and [l] the
            remaining bytes.}}
         If [max] is unspecified the span is limited by the extents of
-        the substring [s].
+        the substring [s]. [sat] defaults to [fun _ -> true].
 
         The invariant [equal_bytes (append l r) s] holds.
 
@@ -692,7 +692,8 @@ module String : sig
         If [max] is unspecified the span is limited by the extents of
         the substring [s]. [None] is returned if no [min] bytes
         satisfied [sat], note that if [min] is [0] [None] is never
-        returned and we get the behaviour of {!span}.
+        returned and we get the behaviour of {!span}. [sat] defaults to
+        [fun _ -> true].
 
         The invariant [equal_bytes (append l r) s] holds.
 
@@ -881,7 +882,7 @@ v}
   *)
   end
 
-  (** {1:ascii Strings as US-ASCII code point sequences} *)
+  (** {1:ascii Strings as US-ASCII character sequences} *)
 
   (** US-ASCII string support.
 
@@ -1296,6 +1297,8 @@ let std_ocaml_trim s =
 {[
   "[vV]?\\([0-9]+\\)\\.\\([0-9]+\\)\\(\\.\\([0-9]+\\)\\)?\\([+-]\\(.*\\)\\)?"
 ]}
+Using substrings is certainly less terse but note that the parser is
+made of reusable sub-functions.
 {[
 let parse_version : string -> (int * int * int * string option) option =
 fun s -> try
