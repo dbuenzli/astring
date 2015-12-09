@@ -252,23 +252,33 @@ let slice ?(start = 0) ?stop s =
   if start = 0 && stop = max_pos then s else
   unsafe_string_sub s start (stop - start)
 
-let span ?(rev = false) sat s =
+let span ?(rev = false) ?max ?(sat = fun _ -> true) s =
   let len = string_length s in
-  let max_pos = len - 1 in
+  let max_idx = len - 1 in
   if rev then begin
+    let min_idx = match max with
+    | None -> 0
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max -> let i = len - max in if i < 0 then 0 else i
+    in
     let rec loop i =
-      if i < 0 then (empty, s) else
-      if sat (unsafe_get s i) then loop (i - 1) else
-      if i = max_pos then (s, empty) else
+      if i >= min_idx && sat (unsafe_get s i) then loop (i - 1) else
+      if i = max_idx then (s, empty) else
+      if i = -1 then (empty, s) else
       let cut = i + 1 in
       unsafe_string_sub s 0 cut, unsafe_string_sub s cut (len - cut)
     in
-    loop max_pos
+    loop max_idx
   end else begin
+    let max_idx = match max with
+    | None -> max_idx
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max -> let i = max - 1 in if i > max_idx then max_idx else i
+    in
     let rec loop i =
-      if i > max_pos then (s, empty) else
-      if sat (unsafe_get s i) then loop (i + 1) else
+      if i <= max_idx && sat (unsafe_get s i) then loop (i + 1) else
       if i = 0 then (empty, s) else
+      if i = len then (s, empty) else
       unsafe_string_sub s 0 i, unsafe_string_sub s i (len - i)
     in
     loop 0

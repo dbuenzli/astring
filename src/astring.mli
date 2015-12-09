@@ -277,10 +277,7 @@ module String : sig
   (** [compare s s'] is [Pervasives.compare s s'], it compares the
       byte sequences of [s] and [s'] in lexicographical order. *)
 
-  (** {1 Finding and keeping bytes}
-
-      {b Tip.} Use substring {{!section:Sub.find}find functions} for
-      index-free string processing. *)
+  (** {1 Finding bytes} *)
 
   val find : ?rev:bool -> ?start:int -> (char -> bool) -> string -> int option
   (** [find ~rev ~start sat s] is the index (if any) of the first byte
@@ -361,6 +358,23 @@ module String : sig
   val trim : ?drop:(char -> bool) -> string -> string
   (** [trim ~drop s] is [s] with prefix and suffix bytes satisfying
       [drop] in [s] removed. [drop] defaults to {!Char.Ascii.is_white}. *)
+
+  val span : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> string ->
+    (string * string)
+  (** [span ~rev ~max ~sat s] is [(l, r)] where:
+        {ul
+        {- if [rev] is [false] (default), [l] is at most [max]
+           consecutive [sat] satisfying initial bytes of [s] and [r]
+           the remaining bytes.}
+        {- if [rev] is [true], [r] is at most [max] consecutive [sat]
+           satisfying final bytes of [s] and [l] the remaining
+           bytes.}}
+        If [max] is unspecified the span is limited by the extents of
+        the string [s]. [sat] defaults to [fun _ -> true].
+
+        The invariant [l ^ r = s] holds.
+
+        @raise Invalid_argument if [max] is negative. *)
 
   val cut : ?rev:bool -> sep:string -> string -> (string * string) option
   (** [cut ~sep s] is either the pair [Some (l,r)] of the two

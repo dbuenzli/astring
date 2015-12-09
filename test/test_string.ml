@@ -540,6 +540,44 @@ let trim = test "String.trim" @@ fun () ->
   eq_str (String.trim "     ") "";
   ()
 
+let span = test "String.span" @@ fun () ->
+  let eq_pair (l0, r0) (l1, r1) = String.equal l0 l1 && String.equal r0 r1 in
+  let no_alloc_left_empty f s =
+    let (l, r) = f s in eq_bool (l == String.empty && r == s) true
+  in
+  let no_alloc_right_empty f s =
+    let (l, r) = f s in eq_bool (l == s && r == String.empty) true
+  in
+  let eq = eq ~eq:eq_pair ~pp:pp_pair in
+  no_alloc_left_empty (String.span ~sat:Char.Ascii.is_white) "ab_cd";
+  eq (String.span ~sat:Char.Ascii.is_letter "ab_cd") ("ab", "_cd");
+  eq (String.span ~max:1 ~sat:Char.Ascii.is_letter "ab_cd") ("a", "b_cd");
+  no_alloc_left_empty (String.span ~max:0 ~sat:Char.Ascii.is_letter) "ab_cd";
+  no_alloc_right_empty (String.span ~rev:true ~sat:Char.Ascii.is_white) "ab_cd";
+  eq (String.span ~rev:true ~sat:Char.Ascii.is_letter "ab_cd") ("ab_", "cd");
+  eq (String.span ~rev:true ~max:1 ~sat:Char.Ascii.is_letter "ab_cd")
+    ("ab_c", "d");
+  no_alloc_right_empty (String.span ~rev:true ~max:0 ~sat:Char.Ascii.is_letter)
+                          "ab_cd";
+  no_alloc_right_empty (String.span ~sat:Char.Ascii.is_letter) "ab";
+  no_alloc_right_empty (String.span ~max:30 ~sat:Char.Ascii.is_letter) "ab";
+  no_alloc_left_empty (String.span ~rev:true ~sat:Char.Ascii.is_letter) "ab";
+  no_alloc_left_empty (String.span ~rev:true ~max:30 ~sat:Char.Ascii.is_letter)
+    "ab";
+  eq (String.span ~max:1 ~sat:Char.Ascii.is_letter "ab") ("a", "b");
+  eq (String.span ~rev:true ~max:1 ~sat:Char.Ascii.is_letter "ab")
+    ("a", "b");
+  no_alloc_left_empty (String.span ~max:1 ~sat:Char.Ascii.is_white) "ab";
+  no_alloc_right_empty (String.span ~rev:true ~max:1 ~sat:Char.Ascii.is_white )
+                         "ab";
+  no_alloc_left_empty (String.span ~sat:Char.Ascii.is_white) String.empty;
+  no_alloc_right_empty (String.span ~sat:Char.Ascii.is_white) String.empty;
+  no_alloc_left_empty (String.span ~rev:true ~sat:Char.Ascii.is_white)
+    String.empty;
+  no_alloc_right_empty (String.span ~rev:true ~sat:Char.Ascii.is_white)
+    String.empty;
+  ()
+
 let cut = test "String.cut" @@ fun () ->
   let ppp = pp_option pp_pair in
   let eqo = eq_option ~eq:(=) ~pp:pp_pair in
@@ -1004,6 +1042,7 @@ let suite = suite "String functions"
       with_index_range;
       slice;
       trim;
+      span;
       cut;
       cuts;
       fields;
