@@ -269,75 +269,75 @@ let find_sub = test "String.find_sub" @@ fun () ->
   app_invalid (String.find_sub ~rev:true ~start:5 ~sub:"ab") "abab";
   ()
 
-let keep = test "String.keep[_map]" @@ fun () ->
+let filter = test "String.filter[_map]" @@ fun () ->
   let no_alloc k f s = eq_bool (k f s == s) true in
-  no_alloc String.keep (fun _ -> true) "";
-  no_alloc String.keep (fun _ -> true) "abcd";
-  no_alloc String.keep_map (fun c -> Some c) "";
-  no_alloc String.keep_map (fun c -> Some c) "abcd";
-  let gen_keep :
+  no_alloc String.filter (fun _ -> true) "";
+  no_alloc String.filter (fun _ -> true) "abcd";
+  no_alloc String.filter_map (fun c -> Some c) "";
+  no_alloc String.filter_map (fun c -> Some c) "abcd";
+  let gen_filter :
     'a. ('a -> string -> string) -> 'a -> unit =
-  fun keep a ->
-    no_alloc keep a "";
-    no_alloc keep a "a";
-    no_alloc keep a "aa";
-    no_alloc keep a "aaa";
-    eq_str (keep a "ab") "a";
-    eq_str (keep a "ba") "a";
-    eq_str (keep a "abc") "a";
-    eq_str (keep a "bac") "a";
-    eq_str (keep a "bca") "a";
-    eq_str (keep a "aba") "aa";
-    eq_str (keep a "aab") "aa";
-    eq_str (keep a "baa") "aa";
-    eq_str (keep a "aabc") "aa";
-    eq_str (keep a "abac") "aa";
-    eq_str (keep a "abca") "aa";
-    eq_str (keep a "baca") "aa";
-    eq_str (keep a "bcaa") "aa";
+  fun filter a ->
+    no_alloc filter a "";
+    no_alloc filter a "a";
+    no_alloc filter a "aa";
+    no_alloc filter a "aaa";
+    eq_str (filter a "ab") "a";
+    eq_str (filter a "ba") "a";
+    eq_str (filter a "abc") "a";
+    eq_str (filter a "bac") "a";
+    eq_str (filter a "bca") "a";
+    eq_str (filter a "aba") "aa";
+    eq_str (filter a "aab") "aa";
+    eq_str (filter a "baa") "aa";
+    eq_str (filter a "aabc") "aa";
+    eq_str (filter a "abac") "aa";
+    eq_str (filter a "abca") "aa";
+    eq_str (filter a "baca") "aa";
+    eq_str (filter a "bcaa") "aa";
   in
-  gen_keep String.keep (fun c -> c = 'a');
-  gen_keep String.keep_map (fun c -> if c = 'a' then Some c else None);
+  gen_filter String.filter (fun c -> c = 'a');
+  gen_filter String.filter_map (fun c -> if c = 'a' then Some c else None);
   let subst_a = function 'a' -> Some 'z' | c -> Some c in
-  no_alloc String.keep_map subst_a "";
-  no_alloc String.keep_map subst_a "b";
-  no_alloc String.keep_map subst_a "bcd";
-  eq_str (String.keep_map subst_a "a") "z";
-  eq_str (String.keep_map subst_a "aa") "zz";
-  eq_str (String.keep_map subst_a "aaa") "zzz";
-  eq_str (String.keep_map subst_a "ab") "zb";
-  eq_str (String.keep_map subst_a "ba") "bz";
-  eq_str (String.keep_map subst_a "abc") "zbc";
-  eq_str (String.keep_map subst_a "bac") "bzc";
-  eq_str (String.keep_map subst_a "bca") "bcz";
-  eq_str (String.keep_map subst_a "aba") "zbz";
-  eq_str (String.keep_map subst_a "aab") "zzb";
-  eq_str (String.keep_map subst_a "baa") "bzz";
-  eq_str (String.keep_map subst_a "aabc") "zzbc";
-  eq_str (String.keep_map subst_a "abac") "zbzc";
-  eq_str (String.keep_map subst_a "abca") "zbcz";
-  eq_str (String.keep_map subst_a "baca") "bzcz";
-  eq_str (String.keep_map subst_a "bcaa") "bczz";
+  no_alloc String.filter_map subst_a "";
+  no_alloc String.filter_map subst_a "b";
+  no_alloc String.filter_map subst_a "bcd";
+  eq_str (String.filter_map subst_a "a") "z";
+  eq_str (String.filter_map subst_a "aa") "zz";
+  eq_str (String.filter_map subst_a "aaa") "zzz";
+  eq_str (String.filter_map subst_a "ab") "zb";
+  eq_str (String.filter_map subst_a "ba") "bz";
+  eq_str (String.filter_map subst_a "abc") "zbc";
+  eq_str (String.filter_map subst_a "bac") "bzc";
+  eq_str (String.filter_map subst_a "bca") "bcz";
+  eq_str (String.filter_map subst_a "aba") "zbz";
+  eq_str (String.filter_map subst_a "aab") "zzb";
+  eq_str (String.filter_map subst_a "baa") "bzz";
+  eq_str (String.filter_map subst_a "aabc") "zzbc";
+  eq_str (String.filter_map subst_a "abac") "zbzc";
+  eq_str (String.filter_map subst_a "abca") "zbcz";
+  eq_str (String.filter_map subst_a "baca") "bzcz";
+  eq_str (String.filter_map subst_a "bcaa") "bczz";
   let subst_a_del_b = function 'a' -> Some 'z' | 'b' -> None | c -> Some c in
-  no_alloc String.keep_map subst_a_del_b "";
-  no_alloc String.keep_map subst_a_del_b "c";
-  no_alloc String.keep_map subst_a_del_b "cd";
-  eq_str (String.keep_map subst_a_del_b "a") "z";
-  eq_str (String.keep_map subst_a_del_b "aa") "zz";
-  eq_str (String.keep_map subst_a_del_b "aaa") "zzz";
-  eq_str (String.keep_map subst_a_del_b "ab") "z";
-  eq_str (String.keep_map subst_a_del_b "ba") "z";
-  eq_str (String.keep_map subst_a_del_b "abc") "zc";
-  eq_str (String.keep_map subst_a_del_b "bac") "zc";
-  eq_str (String.keep_map subst_a_del_b "bca") "cz";
-  eq_str (String.keep_map subst_a_del_b "aba") "zz";
-  eq_str (String.keep_map subst_a_del_b "aab") "zz";
-  eq_str (String.keep_map subst_a_del_b "baa") "zz";
-  eq_str (String.keep_map subst_a_del_b "aabc") "zzc";
-  eq_str (String.keep_map subst_a_del_b "abac") "zzc";
-  eq_str (String.keep_map subst_a_del_b "abca") "zcz";
-  eq_str (String.keep_map subst_a_del_b "baca") "zcz";
-  eq_str (String.keep_map subst_a_del_b "bcaa") "czz";
+  no_alloc String.filter_map subst_a_del_b "";
+  no_alloc String.filter_map subst_a_del_b "c";
+  no_alloc String.filter_map subst_a_del_b "cd";
+  eq_str (String.filter_map subst_a_del_b "a") "z";
+  eq_str (String.filter_map subst_a_del_b "aa") "zz";
+  eq_str (String.filter_map subst_a_del_b "aaa") "zzz";
+  eq_str (String.filter_map subst_a_del_b "ab") "z";
+  eq_str (String.filter_map subst_a_del_b "ba") "z";
+  eq_str (String.filter_map subst_a_del_b "abc") "zc";
+  eq_str (String.filter_map subst_a_del_b "bac") "zc";
+  eq_str (String.filter_map subst_a_del_b "bca") "cz";
+  eq_str (String.filter_map subst_a_del_b "aba") "zz";
+  eq_str (String.filter_map subst_a_del_b "aab") "zz";
+  eq_str (String.filter_map subst_a_del_b "baa") "zz";
+  eq_str (String.filter_map subst_a_del_b "aabc") "zzc";
+  eq_str (String.filter_map subst_a_del_b "abac") "zzc";
+  eq_str (String.filter_map subst_a_del_b "abca") "zcz";
+  eq_str (String.filter_map subst_a_del_b "baca") "zcz";
+  eq_str (String.filter_map subst_a_del_b "bcaa") "czz";
   ()
 
 (* Extracting substrings *)
@@ -998,7 +998,7 @@ let suite = suite "String functions"
       compare;
       find;
       find_sub;
-      keep;
+      filter;
       with_pos_range;
       with_pos_len;
       with_index_range;

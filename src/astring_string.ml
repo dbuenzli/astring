@@ -181,7 +181,7 @@ let find_sub ?(rev = false) ?start ~sub s =
     loop start 0
   end
 
-let keep sat s =
+let filter sat s =
   let max_idx = length s - 1 in
   let rec with_buf b k i = (* k is the write index in b *)
     if i > max_idx then Bytes.sub_string b 0 k else
@@ -198,7 +198,7 @@ let keep sat s =
   in
   try_no_alloc 0
 
-let keep_map f s =
+let filter_map f s =
   let max_idx = length s - 1 in
   let rec with_buf b k i = (* k is the write index in b *)
     if i > max_idx then

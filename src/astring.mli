@@ -305,12 +305,12 @@ module String : sig
       @raise Invalid_argument if [start] is not a {{!idxpos}valid
       position} in [s]. *)
 
-  val keep : (char -> bool) -> string -> string
-  (** [keep sat s] is the string made of the bytes of [s] that satisfy [sat],
+  val filter : (char -> bool) -> string -> string
+  (** [filter sat s] is the string made of the bytes of [s] that satisfy [sat],
       in the same order. *)
 
-  val keep_map : (char -> char option) -> string -> string
-  (** [keep_map f s] is the string made of the bytes of [s] as mapped by
+  val filter_map : (char -> char option) -> string -> string
+  (** [filter_map f s] is the string made of the bytes of [s] as mapped by
       [f], in order. *)
 
   (** {1:extract Extracting substrings}
