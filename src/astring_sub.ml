@@ -13,9 +13,6 @@ let sunsafe_get = string_unsafe_get
 let strf = Format.asprintf
 let err_base = "not on the same physical base"
 let err_empty_sub pos = strf "empty substring [%d;%d]" pos pos
-let err_neg_max max = strf "negative ~max (%d)" max
-let err_neg_min max = strf "negative ~min (%d)" max
-let err_min_max min max = strf "~min (%d) > ~max (%d)" min max
 
 (* From strings *)
 
@@ -77,7 +74,7 @@ let extend ?(rev = false) ?max ?(sat = (fun _ -> true)) (s, start, stop) =
   if rev then begin
     let min_idx = match max with
     | None -> 0
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
     | Some max -> let i = start - max in if i < 0 then 0 else i
     in
     let rec loop i =
@@ -90,7 +87,7 @@ let extend ?(rev = false) ?max ?(sat = (fun _ -> true)) (s, start, stop) =
     let max_idx = string_length s - 1 in
     let max_idx = match max with
     | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
     | Some max -> let i = stop + max - 1 in if i > max_idx then max_idx else i
     in
     let rec loop i =
@@ -107,7 +104,7 @@ let reduce
   if rev then begin
     let min_idx = match max with
     | None -> start
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
     | Some max -> let i = stop - max in if i < start then start else i
     in
     let rec loop i =
@@ -120,7 +117,7 @@ let reduce
     let max_idx = stop - 1 in
     let max_idx = match max with
     | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
     | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
     in
     let rec loop i =
@@ -335,7 +332,7 @@ let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
   if rev then begin
     let min_idx = match max with
     | None -> start
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
     | Some max -> let i = stop - max in if i < start then start else i
     in
     let rec loop i =
@@ -348,7 +345,7 @@ let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
   end else begin
     let max_idx = match max with
     | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
     | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
     in
     let rec loop i =
@@ -361,13 +358,13 @@ let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
   end
 
 let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
-  if min < 0 then invalid_arg (err_neg_min min) else
+  if min < 0 then invalid_arg (Astring_base.err_neg_min min) else
   let max_idx = stop - 1 in
   if rev then begin
     let min_idx = match max with
     | None -> start
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
-    | Some max when min > max -> invalid_arg (err_min_max min max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max when min > max -> invalid_arg (Astring_base.err_min_max min max)
     | Some max -> let i = stop - max in if i < start then start else i
     in
     let need_idx = stop - min - 1 in
@@ -383,8 +380,8 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
   end else begin
     let max_idx = match max with
     | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (err_neg_max max)
-    | Some max when min > max -> invalid_arg (err_min_max min max)
+    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+    | Some max when min > max -> invalid_arg (Astring_base.err_min_max min max)
     | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
     in
     let need_idx = start + min in

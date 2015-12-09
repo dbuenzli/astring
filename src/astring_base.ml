@@ -12,7 +12,8 @@ let strf = Format.asprintf
 
 (* Errors *)
 
-let err_empty_sep = "~sep is an empty string"
+let err_empty_sep =
+  "~sep is an empty string"
 
 let err_pos_range start stop len =
   strf "invalid start:%d stop:%d for position range [0;%d]" start stop len
@@ -22,6 +23,15 @@ let err_pos_len start len s_len =
 
 let err_index_range first last len =
   strf "invalid first:%d last:%d for position range [0;%d]" first last len
+
+let err_neg_max max =
+  strf "negative ~max (%d)" max
+
+let err_neg_min max =
+  strf "negative ~min (%d)" max
+
+let err_min_max min max =
+  strf "~min (%d) > ~max (%d)" min max
 
 (* Making substrings *)
 
