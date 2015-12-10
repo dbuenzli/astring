@@ -28,6 +28,17 @@ let get = string_safe_get
 let get_byte s i = char_to_byte (get s i)
 let unsafe_get = string_unsafe_get
 let unsafe_get_byte s i = char_to_byte (unsafe_get s i)
+
+let head ?(rev = false) s =
+  let len = length s in
+  if len = 0 then None else
+  Some (string_unsafe_get s (if rev then len - 1 else 0))
+
+let get_head ?(rev = false) s =
+  let len = length s in
+  if len = 0 then invalid_arg Astring_base.err_empty_sep else
+  string_unsafe_get s (if rev then len - 1 else 0)
+
 let hash c = Hashtbl.hash c
 
 (* Appending strings *)

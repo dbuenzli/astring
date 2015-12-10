@@ -30,6 +30,17 @@ let misc = test "Misc. base functions" @@ fun () ->
   eq_str (String.v ~len:0 (fun i -> Char.of_byte (0x30 + i))) "";
   ()
 
+let head = test "String.[get_]head" @@ fun () ->
+  let eq_ochar = eq_option ~eq:(=) ~pp:pp_char in
+  eq_ochar (String.head "") None;
+  eq_ochar (String.head ~rev:true "") None;
+  eq_ochar (String.head "bc") (Some 'b');
+  eq_ochar (String.head ~rev:true "bc") (Some 'c');
+  eq_char (String.get_head "bc") 'b';
+  eq_char (String.get_head ~rev:true "bc") 'c';
+  app_invalid ~pp:pp_char String.get_head "";
+  ()
+
 (* Appending strings *)
 
 let append = test "String.append" @@ fun () ->
@@ -1066,6 +1077,7 @@ let make_unique_in = test "String.make_unique_in" @@ fun () ->
 
 let suite = suite "String functions"
     [ misc;
+      head;
       append;
       concat;
       is_empty;

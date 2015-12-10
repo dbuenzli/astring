@@ -12,6 +12,9 @@ let strf = Format.asprintf
 
 (* Errors *)
 
+let err_empty_string =
+  "the string is empty"
+
 let err_empty_sep =
   "~sep is an empty string"
 

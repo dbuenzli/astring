@@ -224,6 +224,15 @@ module String : sig
   val unsafe_get_byte : string -> int -> int
   (**/**)
 
+  val head : ?rev:bool -> string -> char option
+  (** [head s] is [Some (get s h)] with [h = 0] if [rev = true] (default) or
+      [h = length s - 1] if [rev = false]. [None] is returned if [s] is
+      empty. *)
+
+  val get_head : ?rev:bool -> string -> char
+  (** [get_head s] is like {!head} but @raise Invalid_argument if [s]
+      is empty. *)
+
   val hash : string -> int
   (** [hash s] is {!Hashtbl.hash}[ s]. *)
 
