@@ -129,68 +129,75 @@ let compare s0 s1 = Pervasives.compare s0 s1
 
 (* Finding and keeping bytes *)
 
-let rfind_start ?start s = match start with
-| None -> length s
-| Some p when p < 0 || p > length s -> invalid_arg (err_start p s)
-| Some p -> p
+let ffind ?start sat s =
+  let max_idx = length s - 1 in
+  let rec loop i =
+    if i > max_idx then None else
+    if sat (unsafe_get s i) then Some i else loop (i + 1)
+  in
+  match start with
+  | None -> loop 0
+  | Some i when i < 0 -> loop 0
+  | Some i -> loop i
 
-let ffind_start ?start s = match start with
-| None -> 0
-| Some p when p < 0 || p > length s -> invalid_arg (err_start p s)
-| Some p -> p
+let rfind ?start sat s =
+  let max_idx = length s - 1 in
+  let rec loop i =
+    if i < 0 then None else
+    if sat (unsafe_get s i) then Some i else loop (i - 1)
+  in
+  match start with
+  | None -> loop max_idx
+  | Some i when i > max_idx -> loop max_idx
+  | Some i -> loop i
 
-let find ?(rev = false) ?start sat s =
-  if rev then begin
-    let start = rfind_start ?start s in
-    let rec loop i =
-      if i < 0 then None else
-      if sat (unsafe_get s i) then Some i else loop (i - 1)
-    in
-    loop (start - 1)
-  end else begin
-    let start = ffind_start ?start s in
-    let max_idx = length s - 1 in
-    let rec loop i =
-      if i > max_idx then None else
-      if sat (unsafe_get s i) then Some i else loop (i + 1)
-    in
-    loop start
-  end
+let find ?(rev = false) ?start sat s = match rev with
+| false -> ffind ?start sat s
+| true  -> rfind ?start sat s
 
-let find_sub ?(rev = false) ?start ~sub s =
-  if rev then begin
-    let start = rfind_start ?start s in
-    let len_sub = length sub in
-    if len_sub > start then None else
-    let max_idx_sub = len_sub - 1 in
-    let rec loop i k =
-      if i < 0 then None else
-      if k > max_idx_sub then Some i else
-      if k > 0 then
-        if unsafe_get sub k = unsafe_get s (i + k) then loop i (k + 1) else
-        loop (i - 1) 0
-      else if unsafe_get sub 0 = unsafe_get s i then loop i 1 else
-      loop (i - 1) 0
-    in
-    loop (start - len_sub) 0
-  end else begin
-    let start = ffind_start ?start s in
-    let len_sub = length sub in
-    let len_s = length s in
-    if len_sub > len_s - start then None else
-    let max_idx_sub = len_sub - 1 in
-    let max_idx_s = len_s - len_sub in
-    let rec loop i k =
-      if i > max_idx_s then None else
-      if k > max_idx_sub then Some i else
-      if k > 0 then
-        if unsafe_get sub k = unsafe_get s (i + k) then loop i (k + 1) else
-        loop (i + 1) 0
-      else if unsafe_get sub 0 = unsafe_get s i then loop i 1 else
-      loop (i + 1) 0
-    in
-    loop start 0
-  end
+let ffind_sub ?start ~sub s =
+  let len_sub = length sub in
+  let len_s = length s in
+  let max_idx_sub = len_sub - 1 in
+  let max_idx_s = if len_sub <> 0 then len_s - len_sub else len_s - 1 in
+  let rec loop i k =
+    if i > max_idx_s then None else
+    if k > max_idx_sub then Some i else
+    if k > 0 then
+      if unsafe_get sub k = unsafe_get s (i + k)
+      then loop i (k + 1) else loop (i + 1) 0
+    else
+      if unsafe_get sub 0 = unsafe_get s i
+      then loop i 1 else loop (i + 1) 0
+  in
+  match start with
+  | None -> loop 0 0
+  | Some i when i < 0 -> loop 0 0
+  | Some i -> loop i 0
+
+let rfind_sub ?start ~sub s =
+  let len_sub = length sub in
+  let len_s = length s in
+  let max_idx_sub = len_sub - 1 in
+  let max_idx_s = if len_sub <> 0 then len_s - len_sub else len_s - 1 in
+  let rec loop i k =
+    if i < 0 then None else
+    if k > max_idx_sub then Some i else
+    if k > 0 then
+      if unsafe_get sub k = unsafe_get s (i + k)
+      then loop i (k + 1) else loop (i - 1) 0
+    else
+      if unsafe_get sub 0 = unsafe_get s i
+      then loop i 1 else loop (i - 1) 0
+  in
+  match start with
+  | None -> loop max_idx_s 0
+  | Some i when i > max_idx_s -> loop max_idx_s 0
+  | Some i -> loop i 0
+
+let find_sub ?(rev = false) ?start ~sub s = match rev with
+| false -> ffind_sub ?start ~sub s
+| true  -> rfind_sub ?start ~sub s
 
 let filter sat s =
   let max_idx = length s - 1 in

@@ -289,27 +289,28 @@ module String : sig
   (** {1 Finding and filtering bytes} *)
 
   val find : ?rev:bool -> ?start:int -> (char -> bool) -> string -> int option
-  (** [find ~rev ~start sat s] is the index (if any) of the first byte
-      that satisfies [sat] in [s] after the position [start] ([rev] is
-      [false], default) or before the position [start] ([rev] is [true]).
-
-      [start] defaults to [0] if [rev] is [false] and [String.length
-      s] if [rev] is [true.].
-
-      @raise Invalid_argument if [start] is not a {{!idxpos}valid
-      position} in [s]. *)
+  (** [find ~rev ~start sat s] is:
+      {ul
+      {- If [rev] is [false] (default). The smallest index [i], if any,
+         greater or equal to [start] such that [sat s.[i]] is [true].
+         [start] defaults to [0].}
+      {- If [rev] is [true]. The greatest index [i], if any, smaller or equal
+         to [start] such that [sat s.[i]] is [true].
+         [start] defaults to [String.length s - 1].}}
+      Note that [start] can be any integer. *)
 
   val find_sub :?rev:bool -> ?start:int -> sub:string -> string -> int option
-  (** [find_sub ~rev ~start ~sub s] is the index (if any) of the first
-      byte where the substring [sub] starts in [s] after the position
-      [start] ([rev] is [false], default) or before the position
-      [start] ([rev] is [true]).
-
-      [start] defaults to [0] if [rev] is [false] and [String.length
-      s] if [rev] is [true.].
-
-      @raise Invalid_argument if [start] is not a {{!idxpos}valid
-      position} in [s]. *)
+  (** [find_sub ~rev ~start ~sub s] is:
+      {ul
+      {- If [rev] is [false] (default). The smallest index [i], if any,
+         greater or equal to [start] such that [sub] can be found starting
+         at [i] in [s] that is [s.[i] = sub.[0]], [s.[i+1] = sub.[1]], ...
+         [start] defaults to [0].}
+      {- If [rev] is [true]. The greatest index [i], if any, smaller
+         or equal to [start] such that [sub] can be found starting at
+         [i] in [s] that is [s.[i] = sub.[0]], [s.[i+1] = sub.[1]], ...
+         [start] defaults to [String.length s - 1].}}
+      Note that [start] can be any integer. *)
 
   val filter : (char -> bool) -> string -> string
   (** [filter sat s] is the string made of the bytes of [s] that satisfy [sat],
