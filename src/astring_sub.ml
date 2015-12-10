@@ -327,6 +327,59 @@ let find_sub ?(rev = false) ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
     loop start 0
   end
 
+(* Extracting substrings *)
+
+let with_pos_range ?(start = 0) ?stop (base, sub_start, sub_stop) =
+  let sub_len = sub_stop - sub_start in
+  let stop = match stop with None -> sub_len | Some stop -> stop in
+  if start < 0 || stop > sub_len || stop < start
+  then invalid_arg (Astring_base.err_pos_range start stop sub_len)
+  else (base, sub_start + start, sub_start + stop)
+
+let with_pos_len ?(start = 0) ?len (base, sub_start, sub_stop) =
+  let sub_len = sub_stop - sub_start in
+  let len = match len with None -> sub_len - start | Some l -> l in
+  let stop = start + len in
+  if start < 0 || stop > sub_len || stop < start
+  then invalid_arg (Astring_base.err_pos_len start len sub_len)
+  else (base, sub_start + start, sub_start + stop)
+
+let with_index_range ?(first = 0) ?last (base, sub_start, sub_stop) =
+  let sub_len = sub_stop - sub_start in
+  let last = match last with None -> sub_len - 1 | Some l -> l in
+  if first < 0 || last > sub_len - 1 || last < first
+  then invalid_arg (Astring_base.err_index_range first last sub_len)
+  else (base, sub_start + first, sub_start + last + 1)
+
+let slice ?(start = 0) ?stop (base, sub_start, sub_stop as sub) =
+  let max_pos = sub_stop - sub_start in
+  let clip_pos p = if p < 0 then 0 else if p > max_pos then max_pos else p in
+  let start = clip_pos (if start < 0 then max_pos + start else start) in
+  let stop = match stop with None -> max_pos | Some stop -> stop in
+  let stop = clip_pos (if stop < 0 then max_pos + stop else stop) in
+  if start > stop then (base, sub_start, sub_start) else
+  if start = 0 && stop = max_pos then sub else
+  (base, sub_start + start, sub_start + stop)
+
+let trim ?(drop = Astring_char.Ascii.is_white) (s, start, stop as sub) =
+  let len = stop - start in
+  if len = 0 then sub else
+  let max_pos = stop in
+  let max_idx = stop - 1 in
+  let rec left_pos i =
+    if i > max_idx then max_pos else
+    if drop (sunsafe_get s i) then left_pos (i + 1) else i
+  in
+  let rec right_pos i =
+    if i < start then start else
+    if drop (sunsafe_get s i) then right_pos (i - 1) else (i + 1)
+  in
+  let left = left_pos start in
+  if left = max_pos then (s, (start + stop) / 2, (start + stop) / 2)  else
+  let right = right_pos max_idx in
+  if left = start && right = max_pos then sub else
+  (s, left, right)
+
 let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
   let max_idx = stop - 1 in
   if rev then begin
@@ -390,59 +443,6 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
 
 let drop ?(rev = false) ?max ?sat s =
   if rev then fst (span ~rev ?max ?sat s) else snd (span ~rev ?max ?sat s)
-
-(* Extracting substrings *)
-
-let with_pos_range ?(start = 0) ?stop (base, sub_start, sub_stop) =
-  let sub_len = sub_stop - sub_start in
-  let stop = match stop with None -> sub_len | Some stop -> stop in
-  if start < 0 || stop > sub_len || stop < start
-  then invalid_arg (Astring_base.err_pos_range start stop sub_len)
-  else (base, sub_start + start, sub_start + stop)
-
-let with_pos_len ?(start = 0) ?len (base, sub_start, sub_stop) =
-  let sub_len = sub_stop - sub_start in
-  let len = match len with None -> sub_len - start | Some l -> l in
-  let stop = start + len in
-  if start < 0 || stop > sub_len || stop < start
-  then invalid_arg (Astring_base.err_pos_len start len sub_len)
-  else (base, sub_start + start, sub_start + stop)
-
-let with_index_range ?(first = 0) ?last (base, sub_start, sub_stop) =
-  let sub_len = sub_stop - sub_start in
-  let last = match last with None -> sub_len - 1 | Some l -> l in
-  if first < 0 || last > sub_len - 1 || last < first
-  then invalid_arg (Astring_base.err_index_range first last sub_len)
-  else (base, sub_start + first, sub_start + last + 1)
-
-let slice ?(start = 0) ?stop (base, sub_start, sub_stop as sub) =
-  let max_pos = sub_stop - sub_start in
-  let clip_pos p = if p < 0 then 0 else if p > max_pos then max_pos else p in
-  let start = clip_pos (if start < 0 then max_pos + start else start) in
-  let stop = match stop with None -> max_pos | Some stop -> stop in
-  let stop = clip_pos (if stop < 0 then max_pos + stop else stop) in
-  if start > stop then (base, sub_start, sub_start) else
-  if start = 0 && stop = max_pos then sub else
-  (base, sub_start + start, sub_start + stop)
-
-let trim ?(drop = Astring_char.Ascii.is_white) (s, start, stop as sub) =
-  let len = stop - start in
-  if len = 0 then sub else
-  let max_pos = stop in
-  let max_idx = stop - 1 in
-  let rec left_pos i =
-    if i > max_idx then max_pos else
-    if drop (sunsafe_get s i) then left_pos (i + 1) else i
-  in
-  let rec right_pos i =
-    if i < start then start else
-    if drop (sunsafe_get s i) then right_pos (i - 1) else (i + 1)
-  in
-  let left = left_pos start in
-  if left = max_pos then (s, (start + stop) / 2, (start + stop) / 2)  else
-  let right = right_pos max_idx in
-  if left = start && right = max_pos then sub else
-  (s, left, right)
 
 let fcut ~sep:(sep, sep_start, sep_stop) (s, start, stop) =
   let sep_len = sep_stop - sep_start in

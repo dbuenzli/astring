@@ -286,7 +286,7 @@ module String : sig
   (** [compare s s'] is [Pervasives.compare s s'], it compares the
       byte sequences of [s] and [s'] in lexicographical order. *)
 
-  (** {1 Finding bytes} *)
+  (** {1 Finding and filtering bytes} *)
 
   val find : ?rev:bool -> ?start:int -> (char -> bool) -> string -> int option
   (** [find ~rev ~start sat s] is the index (if any) of the first byte
@@ -689,7 +689,7 @@ module String : sig
         @raise Invalid_argument if [s] and [s'] are not on the same base
         according to physical equality. *)
 
-    (** {1:find Finding and parsing bytes}  *)
+    (** {1:find Finding and filtering bytes}  *)
 
     val find : ?rev:bool -> (char -> bool) -> sub -> sub option
     (** [find ~rev sat s] is the substring of [s] (if any) that spans the
@@ -704,6 +704,31 @@ module String : sig
         [false]). Only bytes are compared and [sub] can be on a
         different base. [None] is returned if there is no match of
         [sub] in [s]. *)
+
+    (** {1:extract Extracting substrings}
+
+        The extracted substrings are on the same base as the substring
+        [s] acted upon. This means that while positions and index
+        arguments are specified with respect to [s]'s contents, the
+        resulting substrings extents ({!start_pos}, {!stop_pos}) are
+        expressed as positions on the base string of [s]. *)
+
+    val with_pos_range : ?start:int -> ?stop:int -> sub -> sub
+    (** [with_pos_range] is like {!String.with_pos_range}. *)
+
+    val with_pos_len : ?start:int -> ?len:int -> sub -> sub
+    (** [with_pos_len] is like {!String.with_pos_len}. *)
+
+    val with_index_range : ?first:int -> ?last:int -> sub -> sub
+    (** [with_index_range] is like {!String.with_index_range} *)
+
+    val slice : ?start:int -> ?stop:int -> sub -> sub
+    (** [slice] is like {!String.slice}. If [stop < start] returns
+        the empty string at the start of the argument. *)
+
+    val trim : ?drop:(char -> bool) -> sub -> sub
+    (** [trim] is like {!String.trim}. If all bytes are dropped returns
+        an empty string located in the middle of the argument. *)
 
     val span : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> sub ->
       (sub * sub)
@@ -747,33 +772,7 @@ module String : sig
     (**
        {ul
        {- [drop ~rev:false ~max ~sat s] is [snd (span ~rev:false ~max ~sat s)]}
-       {- [drop ~rev:true ~max ~sat s] is [fst (span ~rev:true ~max ~sat s)]}}
-    *)
-
-    (** {1:extract Extracting substrings}
-
-        The extracted substrings are on the same base as the substring
-        [s] acted upon. This means that while positions and index
-        arguments are specified with respect to [s]'s contents, the
-        resulting substrings extents ({!start_pos}, {!stop_pos}) are
-        expressed as positions on the base string of [s]. *)
-
-    val with_pos_range : ?start:int -> ?stop:int -> sub -> sub
-    (** [with_pos_range] is like {!String.with_pos_range}. *)
-
-    val with_pos_len : ?start:int -> ?len:int -> sub -> sub
-    (** [with_pos_len] is like {!String.with_pos_len}. *)
-
-    val with_index_range : ?first:int -> ?last:int -> sub -> sub
-    (** [with_index_range] is like {!String.with_index_range} *)
-
-    val slice : ?start:int -> ?stop:int -> sub -> sub
-    (** [slice] is like {!String.slice}. If [stop < start] returns
-        the empty string at the start of the argument. *)
-
-    val trim : ?drop:(char -> bool) -> sub -> sub
-    (** [trim] is like {!String.trim}. If all bytes are dropped returns
-        an empty string located in the middle of the argument. *)
+       {- [drop ~rev:true ~max ~sat s] is [fst (span ~rev:true ~max ~sat s)]}}*)
 
     val cut : ?rev:bool -> sep:sub -> sub -> (sub * sub) option
     (** [cut] is like {!String.cut}. [sep] can be on a different base. *)

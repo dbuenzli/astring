@@ -263,6 +263,24 @@ let slice ?(start = 0) ?stop s =
   if start = 0 && stop = max_pos then s else
   unsafe_string_sub s start (stop - start)
 
+let trim ?(drop = Astring_char.Ascii.is_white) s =
+  let max_pos = length s in
+  if max_pos = 0 then s else
+  let max_idx = max_pos - 1 in
+  let rec left_pos i =
+    if i > max_idx then max_pos else
+    if drop (unsafe_get s i) then left_pos (i + 1) else i
+  in
+  let rec right_pos i =
+    if i < 0 then 0 else
+    if drop (unsafe_get s i) then right_pos (i - 1) else (i + 1)
+  in
+  let left = left_pos 0 in
+  if left = max_pos then empty else
+  let right = right_pos max_idx in
+  if left = 0 && right = max_pos then s else
+  unsafe_string_sub s left (right - left)
+
 let span ?(rev = false) ?max ?(sat = fun _ -> true) s =
   let len = string_length s in
   let max_idx = len - 1 in
@@ -333,24 +351,6 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) s =
     in
     loop 0
 end
-
-let trim ?(drop = Astring_char.Ascii.is_white) s =
-  let max_pos = length s in
-  if max_pos = 0 then s else
-  let max_idx = max_pos - 1 in
-  let rec left_pos i =
-    if i > max_idx then max_pos else
-    if drop (unsafe_get s i) then left_pos (i + 1) else i
-  in
-  let rec right_pos i =
-    if i < 0 then 0 else
-    if drop (unsafe_get s i) then right_pos (i - 1) else (i + 1)
-  in
-  let left = left_pos 0 in
-  if left = max_pos then empty else
-  let right = right_pos max_idx in
-  if left = 0 && right = max_pos then s else
-  unsafe_string_sub s left (right - left)
 
 let fcut ~sep s =
   let sep_len = length sep in
