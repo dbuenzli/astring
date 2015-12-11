@@ -399,137 +399,279 @@ let filter = test "String.filter[_map]" @@ fun () ->
 
 (* Extracting substrings *)
 
-let with_pos_range = test "String.with_pos_range" @@ fun () ->
-  let no_alloc ?start ?stop s =
-    eq_bool (String.with_pos_range s ?start ?stop == s ||
+let with_range = test "String.with_range" @@ fun () ->
+  let no_alloc ?first ?len s =
+    eq_bool (String.with_range s ?first ?len == s ||
              String.(equal empty s)) true
   in
-  let invalid ?start ?stop s =
-    app_invalid ~pp:pp_str (String.with_pos_range ?start ?stop) s
+  let is_empty ?first ?len s =
+    let s = String.with_range ?first ?len s in
+    eq_str s String.empty;
+    eq_bool (s == String.empty) true;
   in
+  let invalid ?first ?len s =
+    app_invalid ~pp:pp_str (String.with_range ?first ?len) s
+  in
+  let eq_range ?first ?len s s' = eq_str (String.with_range ?first ?len s) s' in
   no_alloc "";
-  no_alloc ~start:0 ~stop:0 "";
-  invalid "" ~start:1 ~stop:0;
-  invalid "" ~start:0 ~stop:1;
-  invalid "" ~start:(-1) ~stop:1;
-  invalid "" ~start:0 ~stop:(-1);
+  invalid  "" ~len:(-1);
+  no_alloc "" ~len:0;
+  no_alloc "" ~len:1;
+  no_alloc "" ~len:2;
+  no_alloc "" ~first:(-1);
+  no_alloc "" ~first:0;
+  no_alloc "" ~first:1;
+  invalid  "" ~first:(-1) ~len:(-1);
+  no_alloc "" ~first:(-1) ~len:0;
+  no_alloc "" ~first:(-1) ~len:1;
+  invalid  "" ~first:0 ~len:(-1);
+  no_alloc "" ~first:0 ~len:0;
+  no_alloc "" ~first:0 ~len:1;
+  invalid  "" ~first:1 ~len:(-1);
+  no_alloc "" ~first:1 ~len:0;
+  no_alloc "" ~first:1 ~len:1;
   no_alloc "a";
-  eq_str (String.with_pos_range "a" ~start:0 ~stop:0) "";
-  no_alloc "a" ~start:0 ~stop:1;
-  eq_str (String.with_pos_range "a" ~start:1 ~stop:1) "";
-  invalid "a" ~start:1 ~stop:2;
-  invalid "a" ~start:(-1) ~stop:1;
+  invalid  "a" ~len:(-1);
+  is_empty "a" ~len:0;
+  no_alloc "a" ~len:1;
+  no_alloc "a" ~len:2;
+  no_alloc "a" ~first:(-1);
+  no_alloc "a" ~first:0;
+  is_empty "a" ~first:1;
+  invalid  "a" ~first:(-1) ~len:(-1);
+  is_empty "a" ~first:(-1) ~len:0;
+  is_empty "a" ~first:(-1) ~len:1;
+  no_alloc "a" ~first:(-1) ~len:2;
+  no_alloc "a" ~first:(-1) ~len:3;
+  invalid  "a" ~first:0 ~len:(-1);
+  is_empty "a" ~first:0 ~len:0;
+  no_alloc "a" ~first:0 ~len:1;
+  no_alloc "a" ~first:0 ~len:2;
+  no_alloc "a" ~first:0 ~len:3;
+  invalid  "a" ~first:1 ~len:(-1);
+  is_empty "a" ~first:1 ~len:0;
+  is_empty "a" ~first:1 ~len:1;
+  is_empty "a" ~first:1 ~len:2;
+  is_empty "a" ~first:1 ~len:3;
+  no_alloc "ab";
+  invalid  "ab" ~len:(-1);
+  is_empty "ab" ~len:0;
+  eq_range "ab" ~len:1 "a";
+  no_alloc "ab" ~len:2;
+  no_alloc "ab" ~len:3;
+  no_alloc "ab" ~first:(-1);
+  no_alloc "ab" ~first:0;
+  eq_range "ab" ~first:1 "b";
+  is_empty "ab" ~first:2;
+  invalid  "ab" ~first:(-1) ~len:(-1);
+  is_empty "ab" ~first:(-1) ~len:0;
+  is_empty "ab" ~first:(-1) ~len:1;
+  eq_range "ab" ~first:(-1) ~len:2 "a";
+  no_alloc "ab" ~first:(-1) ~len:3;
+  no_alloc "ab" ~first:(-1) ~len:4;
+  invalid  "ab" ~first:0 ~len:(-1);
+  is_empty "ab" ~first:0 ~len:0;
+  eq_range "ab" ~first:0 ~len:1 "a";
+  no_alloc "ab" ~first:0 ~len:2;
+  no_alloc "ab" ~first:0 ~len:3;
+  no_alloc "ab" ~first:0 ~len:4;
+  invalid  "ab" ~first:1 ~len:(-1);
+  is_empty "ab" ~first:1 ~len:0;
+  eq_range "ab" ~first:1 ~len:1 "b";
+  eq_range "ab" ~first:1 ~len:2 "b";
+  eq_range "ab" ~first:1 ~len:3 "b";
+  eq_range "ab" ~first:1 ~len:4 "b";
+  invalid  "ab" ~first:2 ~len:(-1);
+  is_empty "ab" ~first:2 ~len:0;
+  is_empty "ab" ~first:2 ~len:1;
+  is_empty "ab" ~first:2 ~len:2;
+  is_empty "ab" ~first:2 ~len:3;
+  is_empty "ab" ~first:2 ~len:4;
   no_alloc "abc";
-  eq_str (String.with_pos_range ~start:1 "abc") "bc";
-  eq_str (String.with_pos_range ~start:2 "abc") "c";
-  eq_str (String.with_pos_range ~start:3 "abc") "";
-  invalid ~start:4 "abc";
-  eq_str (String.with_pos_range "abc" ~start:0 ~stop:0) "";
-  eq_str (String.with_pos_range "abc" ~start:0 ~stop:1) "a";
-  eq_str (String.with_pos_range "abc" ~start:0 ~stop:2) "ab";
-  no_alloc  "abc" ~start:0 ~stop:3;
-  invalid "abc" ~start:0 ~stop:4;
-  eq_str (String.with_pos_range "abc" ~start:1 ~stop:1) "";
-  eq_str (String.with_pos_range "abc" ~start:1 ~stop:2) "b";
-  eq_str (String.with_pos_range "abc" ~start:1 ~stop:3) "bc";
-  invalid "abc" ~start:1 ~stop:0;
-  invalid "abc" ~start:1 ~stop:4;
-  eq_str (String.with_pos_range "abc" ~start:2 ~stop:2) "";
-  eq_str (String.with_pos_range "abc" ~start:2 ~stop:3) "c";
-  invalid "abc" ~start:2 ~stop:0;
-  invalid "abc" ~start:2 ~stop:1;
-  invalid "abc" ~start:2 ~stop:4;
-  eq_str (String.with_pos_range "abc" ~start:3 ~stop:3) "";
-  invalid "abc" ~start:3 ~stop:0;
-  invalid "abc" ~start:3 ~stop:1;
-  invalid "abc" ~start:3 ~stop:2;
-  invalid "abc" ~start:3 ~stop:4;
-  invalid "abc" ~start:(-1) ~stop:0;
-  ()
-
-let with_pos_len = test "String.with_pos_len" @@ fun () ->
-  let no_alloc ?start ?len s =
-    eq_bool (String.with_pos_len s ?start ?len == s ||
-             String.(equal empty s)) true
-  in
-  let invalid ?start ?len s =
-    app_invalid ~pp:pp_str (String.with_pos_len ?start ?len) s
-  in
-  no_alloc "";
-  no_alloc "";
-  invalid "" ~start:1 ~len:0;
-  invalid "" ~start:0 ~len:1;
-  invalid "" ~start:(-1) ~len:1;
-  invalid "" ~start:0 ~len:(-1);
-  no_alloc "a";
-  eq_str (String.with_pos_len "a" ~start:0 ~len:0) "";
-  no_alloc "a" ~start:0 ~len:1;
-  eq_str (String.with_pos_len "a" ~start:1 ~len:0) "";
-  invalid "a" ~start:1 ~len:1;
-  invalid "a" ~start:(-1) ~len:1;
-  no_alloc "abc";
-  eq_str (String.with_pos_len ~start:1 "abc") "bc";
-  eq_str (String.with_pos_len ~start:2 "abc") "c";
-  eq_str (String.with_pos_len ~start:3 "abc") "";
-  invalid ~start:4 "abc";
-  eq_str (String.with_pos_len "abc" ~start:0 ~len:0) "";
-  eq_str (String.with_pos_len "abc" ~start:0 ~len:1) "a";
-  eq_str (String.with_pos_len "abc" ~start:0 ~len:2) "ab";
-  no_alloc ~start:0 ~len:3 "abc";
-  invalid "abc" ~start:0 ~len:4;
-  eq_str (String.with_pos_len "abc" ~start:1 ~len:0) "";
-  eq_str (String.with_pos_len "abc" ~start:1 ~len:1) "b";
-  eq_str (String.with_pos_len "abc" ~start:1 ~len:2) "bc";
-  invalid "abc" ~start:1 ~len:3;
-  eq_str (String.with_pos_len "abc" ~start:2 ~len:0) "";
-  eq_str (String.with_pos_len "abc" ~start:2 ~len:1) "c";
-  invalid "abc" ~start:2 ~len:2;
-  eq_str (String.with_pos_len "abc" ~start:3 ~len:0) "";
-  invalid "abc" ~start:1 ~len:4;
-  invalid "abc" ~start:(-1) ~len:1;
+  invalid  "abc" ~len:(-1);
+  is_empty "abc" ~len:0;
+  eq_range "abc" ~len:1 "a";
+  eq_range "abc" ~len:2 "ab";
+  no_alloc "abc" ~len:3;
+  no_alloc "abc" ~len:4;
+  no_alloc "abc" ~first:(-1);
+  no_alloc "abc" ~first:0;
+  eq_range "abc" ~first:1 "bc";
+  eq_range "abc" ~first:2 "c";
+  is_empty "abc" ~first:3;
+  invalid  "abc" ~first:(-1) ~len:(-1);
+  is_empty "abc" ~first:(-1) ~len:0;
+  is_empty "abc" ~first:(-1) ~len:1;
+  eq_range "abc" ~first:(-1) ~len:2 "a";
+  eq_range "abc" ~first:(-1) ~len:3 "ab";
+  eq_range "abc" ~first:(-1) ~len:4 "abc";
+  no_alloc "abc" ~first:(-1) ~len:5;
+  invalid  "abc" ~first:0 ~len:(-1);
+  is_empty "abc" ~first:0 ~len:0;
+  eq_range "abc" ~first:0 ~len:1 "a";
+  eq_range "abc" ~first:0 ~len:2 "ab";
+  no_alloc "abc" ~first:0 ~len:3;
+  no_alloc "abc" ~first:0 ~len:4;
+  no_alloc "abc" ~first:0 ~len:5;
+  invalid  "abc" ~first:1 ~len:(-1);
+  is_empty "abc" ~first:1 ~len:0;
+  eq_range "abc" ~first:1 ~len:1 "b";
+  eq_range "abc" ~first:1 ~len:2 "bc";
+  eq_range "abc" ~first:1 ~len:3 "bc";
+  eq_range "abc" ~first:1 ~len:4 "bc";
+  eq_range "abc" ~first:1 ~len:5 "bc";
+  invalid  "abc" ~first:2 ~len:(-1);
+  is_empty "abc" ~first:2 ~len:0;
+  eq_range "abc" ~first:2 ~len:1 "c";
+  eq_range "abc" ~first:2 ~len:2 "c";
+  eq_range "abc" ~first:2 ~len:3 "c";
+  eq_range "abc" ~first:2 ~len:4 "c";
+  eq_range "abc" ~first:2 ~len:5 "c";
+  invalid  "abc" ~first:3 ~len:(-1);
+  is_empty "abc" ~first:3 ~len:0;
+  is_empty "abc" ~first:3 ~len:1;
+  is_empty "abc" ~first:3 ~len:2;
+  is_empty "abc" ~first:3 ~len:3;
+  is_empty "abc" ~first:3 ~len:4;
+  is_empty "abc" ~first:3 ~len:5;
   ()
 
 let with_index_range = test "String.with_index_range" @@ fun () ->
   let no_alloc ?first ?last s =
-    eq_bool (String.with_index_range s ?first ?last == s) true
+    eq_bool (String.with_index_range s ?first ?last == s ||
+             String.(equal empty s)) true
   in
-  let invalid ?first ?last s =
-    app_invalid ~pp:pp_str (String.with_index_range ?first ?last) s
+  let is_empty ?first ?last s =
+    let s = String.with_index_range ?first ?last s in
+    eq_str s String.empty;
+    eq_bool (s == String.empty) true;
   in
-  invalid "";
-  invalid "" ~first:0 ~last:0;
-  invalid "" ~first:1 ~last:0;
-  invalid "" ~first:0 ~last:1;
-  invalid "" ~first:(-1) ~last:1;
-  invalid "" ~first:0 ~last:(-1);
-  no_alloc ~first:0 ~last:0 "a";
-  invalid "a" ~first:0 ~last:1;
-  invalid "a" ~first:0 ~last:(-1);
-  invalid "a" ~first:0 ~last:2;
-  invalid "a" ~first:(-1) ~last:0;
+  let eq_range ?first ?last s s' =
+    eq_str (String.with_index_range ?first ?last s) s'
+  in
+  no_alloc "";
+  no_alloc "" ~first:(-1);
+  no_alloc "" ~first:0;
+  no_alloc "" ~first:1;
+  no_alloc "" ~first:2;
+  no_alloc "" ~last:(-1);
+  no_alloc "" ~last:0;
+  no_alloc "" ~last:1;
+  no_alloc "" ~last:2;
+  no_alloc "" ~first:(-1) ~last:(-1);
+  no_alloc "" ~first:(-1) ~last:0;
+  no_alloc "" ~first:(-1) ~last:1;
+  no_alloc "" ~first:0 ~last:(-1);
+  no_alloc "" ~first:0 ~last:0;
+  no_alloc "" ~first:0 ~last:1;
+  no_alloc "" ~first:1 ~last:(-1);
+  no_alloc "" ~first:1 ~last:0;
+  no_alloc "" ~first:1 ~last:1;
+  no_alloc "a";
+  no_alloc "a" ~first:(-1);
+  no_alloc "a" ~first:0;
+  is_empty "a" ~first:1;
+  is_empty "a" ~first:2;
+  is_empty "a" ~last:(-1);
+  no_alloc "a" ~last:0;
+  no_alloc "a" ~last:1;
+  no_alloc "a" ~last:2;
+  is_empty "a" ~first:(-1) ~last:(-1);
+  no_alloc "a" ~first:(-1) ~last:0;
+  no_alloc "a" ~first:(-1) ~last:1;
+  no_alloc "a" ~first:(-1) ~last:2;
+  no_alloc "a" ~first:(-1) ~last:3;
+  is_empty "a" ~first:0 ~last:(-1);
+  no_alloc "a" ~first:0 ~last:0;
+  no_alloc "a" ~first:0 ~last:1;
+  no_alloc "a" ~first:0 ~last:2;
+  no_alloc "a" ~first:0 ~last:3;
+  is_empty "a" ~first:1 ~last:(-1);
+  is_empty "a" ~first:1 ~last:0;
+  is_empty "a" ~first:1 ~last:1;
+  is_empty "a" ~first:1 ~last:2;
+  is_empty "a" ~first:1 ~last:3;
+  no_alloc "ab";
+  no_alloc "ab" ~first:(-1);
+  no_alloc "ab" ~first:0;
+  eq_range "ab" ~first:1 "b";
+  is_empty "ab" ~first:2;
+  is_empty "ab" ~last:(-1);
+  eq_range "ab" ~last:0 "a";
+  no_alloc "ab" ~last:1;
+  no_alloc "ab" ~last:2;
+  no_alloc "ab" ~last:3;
+  is_empty "ab" ~first:(-1) ~last:(-1);
+  eq_range "ab" ~first:(-1) ~last:0 "a";
+  no_alloc "ab" ~first:(-1) ~last:1;
+  no_alloc "ab" ~first:(-1) ~last:2;
+  no_alloc "ab" ~first:(-1) ~last:3;
+  no_alloc "ab" ~first:(-1) ~last:4;
+  is_empty "ab" ~first:0 ~last:(-1);
+  eq_range "ab" ~first:0 ~last:0 "a";
+  no_alloc "ab" ~first:0 ~last:1;
+  no_alloc "ab" ~first:0 ~last:2;
+  no_alloc "ab" ~first:0 ~last:3;
+  no_alloc "ab" ~first:0 ~last:4;
+  is_empty "ab" ~first:1 ~last:(-1);
+  is_empty "ab" ~first:1 ~last:0;
+  eq_range "ab" ~first:1 ~last:1 "b";
+  eq_range "ab" ~first:1 ~last:2 "b";
+  eq_range "ab" ~first:1 ~last:3 "b";
+  eq_range "ab" ~first:1 ~last:4 "b";
+  is_empty "ab" ~first:2 ~last:(-1);
+  is_empty "ab" ~first:2 ~last:0;
+  is_empty "ab" ~first:2 ~last:1;
+  is_empty "ab" ~first:2 ~last:2;
+  is_empty "ab" ~first:2 ~last:3;
+  is_empty "ab" ~first:2 ~last:4;
   no_alloc "abc";
-  no_alloc ~first:0 "abc";
-  eq_str (String.with_index_range ~first:1 "abc") "bc";
-  eq_str (String.with_index_range ~first:2 "abc") "c";
-  invalid ~first:3 "abc";
-  invalid ~first:4 "abc";
-  eq_str (String.with_index_range "abc" ~first:0 ~last:0) "a";
-  eq_str (String.with_index_range "abc" ~first:0 ~last:1) "ab";
+  no_alloc "abc" ~first:(-1);
+  no_alloc "abc" ~first:0;
+  eq_range "abc" ~first:1 "bc";
+  eq_range "abc" ~first:2 "c";
+  is_empty "abc" ~first:3;
+  is_empty "abc" ~last:(-1);
+  eq_range "abc" ~last:0 "a";
+  eq_range "abc" ~last:1 "ab";
+  no_alloc "abc" ~last:2;
+  no_alloc "abc" ~last:3;
+  no_alloc "abc" ~last:4;
+  is_empty "abc" ~first:(-1) ~last:(-1);
+  eq_range "abc" ~first:(-1) ~last:0 "a";
+  eq_range "abc" ~first:(-1) ~last:1 "ab";
+  no_alloc "abc" ~first:(-1) ~last:2;
+  no_alloc "abc" ~first:(-1) ~last:3;
+  no_alloc "abc" ~first:(-1) ~last:4;
+  no_alloc "abc" ~first:(-1) ~last:5;
+  is_empty "abc" ~first:0 ~last:(-1);
+  eq_range "abc" ~first:0 ~last:0 "a";
+  eq_range "abc" ~first:0 ~last:1 "ab";
   no_alloc "abc" ~first:0 ~last:2;
-  invalid "abc" ~first:0 ~last:3;
-  eq_str (String.with_index_range "abc" ~first:1 ~last:1) "b";
-  eq_str (String.with_index_range "abc" ~first:1 ~last:2) "bc";
-  invalid "abc" ~first:1 ~last:0;
-  invalid "abc" ~first:1 ~last:3;
-  eq_str (String.with_index_range "abc" ~first:2 ~last:2) "c";
-  invalid "abc" ~first:2 ~last:0;
-  invalid "abc" ~first:2 ~last:1;
-  invalid "abc" ~first:2 ~last:3;
-  invalid "abc" ~first:3 ~last:0;
-  invalid "abc" ~first:3 ~last:1;
-  invalid "abc" ~first:3 ~last:2;
-  invalid "abc" ~first:3 ~last:3;
-  invalid "abc" ~first:(-1) ~last:0;
+  no_alloc "abc" ~first:0 ~last:3;
+  no_alloc "abc" ~first:0 ~last:4;
+  no_alloc "abc" ~first:0 ~last:5;
+  is_empty "abc" ~first:1 ~last:(-1);
+  is_empty "abc" ~first:1 ~last:0;
+  eq_range "abc" ~first:1 ~last:1 "b";
+  eq_range "abc" ~first:1 ~last:2 "bc";
+  eq_range "abc" ~first:1 ~last:3 "bc";
+  eq_range "abc" ~first:1 ~last:4 "bc";
+  eq_range "abc" ~first:1 ~last:5 "bc";
+  is_empty "abc" ~first:2 ~last:(-1);
+  is_empty "abc" ~first:2 ~last:0;
+  is_empty "abc" ~first:2 ~last:1;
+  eq_range "abc" ~first:2 ~last:2 "c";
+  eq_range "abc" ~first:2 ~last:3 "c";
+  eq_range "abc" ~first:2 ~last:4 "c";
+  eq_range "abc" ~first:2 ~last:5 "c";
+  is_empty "abc" ~first:3 ~last:(-1);
+  is_empty "abc" ~first:3 ~last:0;
+  is_empty "abc" ~first:3 ~last:1;
+  is_empty "abc" ~first:3 ~last:2;
+  is_empty "abc" ~first:3 ~last:3;
+  is_empty "abc" ~first:3 ~last:4;
+  is_empty "abc" ~first:3 ~last:5;
   ()
 
 let slice = test "String.slice" @@ fun () ->
@@ -1137,8 +1279,7 @@ let suite = suite "String functions"
       find;
       find_sub;
       filter;
-      with_pos_range;
-      with_pos_len;
+      with_range;
       with_index_range;
       slice;
       trim;

@@ -251,14 +251,33 @@ let make_sub s ~start ~stop =
   if start = 0 && len = length s then s else
   unsafe_string_sub s start (stop - start)
 
-let with_pos_range ?start ?stop s =
-  Astring_base.with_pos_range make_sub ?start ?stop s
+let with_range ?(first = 0) ?(len = max_int) s =
+  if len < 0 then invalid_arg (Astring_base.err_neg_len len) else
+  if len = 0 then empty else
+  let s_len = length s in
+  let max_idx = s_len - 1 in
+  let last = match len with
+  | len when len = max_int -> max_idx
+  | len ->
+      let last = first + len - 1 in
+      if last > max_idx then max_idx else last
+  in
+  let first = if first < 0 then 0 else first in
+  if first > max_idx || last < 0 || first > last then empty else
+  if first = 0 && last = max_idx then s else
+  unsafe_string_sub s first (last + 1 - first)
 
-let with_pos_len ?start ?len s =
-  Astring_base.with_pos_len make_sub ?start ?len s
-
-let with_index_range ?first ?last s =
-  Astring_base.with_index_range make_sub ?first ?last s
+let with_index_range ?(first = 0) ?last s =
+  let s_len = length s in
+  let max_idx = s_len - 1 in
+  let last = match last with
+  | None -> max_idx
+  | Some last -> if last > max_idx then max_idx else last
+  in
+  let first = if first < 0 then 0 else first in
+  if first > max_idx || last < 0 || first > last then empty else
+  if first = 0 && last = max_idx then s else
+  unsafe_string_sub s first (last + 1 - first)
 
 let slice ?(start = 0) ?stop s =
   let max_pos = length s in

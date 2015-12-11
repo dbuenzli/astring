@@ -178,9 +178,10 @@ end
 
 (** Strings, {{!Sub}substrings}, string {{!Set}sets} and {{!Map}maps}.
 
-    Make sure you understand the basics about [string]
-    {{!idxpos}indices and positions}, they are essential
-    concepts to understand the semantics of functions.
+    A string [s] of length [l] is a zero-based indexed sequence of [l]
+    bytes. An index [i] is {e valid} in [s] if it is in the range
+    \[[0];[l-1]\], it represents the [i]th byte of [s] which can be
+    accessed using the string indexing operator [s.[i]].
 
     {b Important.} OCaml's [string]s became immutable since 4.02.
     Whenever possible compile your code with the [-safe-string]
@@ -325,29 +326,24 @@ module String : sig
       {b Tip.} These functions extract substrings as new strings. Using
       {{!Sub}substrings} may be less wasteful and more flexible. *)
 
-  val with_pos_range : ?start:int -> ?stop:int -> string -> string
-  (** [with_pos_range ~start ~stop s] is the substring of [s] that starts
-      at position [start] (defaults to [0]) and stops at position
-      [stop] (defaults to [String.length s]).
+  val with_range : ?first:int -> ?len:int -> string -> string
+  (** [with_range ~first ~len s] are the consecutive bytes of [s] whose
+      indices exist in the range \[[first];[first + len - 1]\].
 
-      @raise Invalid_argument if [start] or [stop] are not {{!idxpos}valid
-      positions} of [s] or if [stop < start]. *)
+      [first] defaults to [0] and [len] to [max_int]. Note that
+      [first] can be any integer and [len] any positive integer.
 
-  val with_pos_len : ?start:int -> ?len:int -> string -> string
-  (** [with_pos_len ~start ~len] is the substring of [s] that
-      contains the bytes from position [start] (defaults to [0])
-      to [start + len] (defaults to [String.length s - start]).
-
-      @raise Invalid_argument if [start] or [start + len]
-      are not {{!idxpos}valid positions} of [s] or if [len < 0]. *)
+      @raise Invalid_argument if [len] is negative. *)
 
   val with_index_range : ?first:int -> ?last:int -> string -> string
-  (** [with_index_range ~first ~last s] is the substring of [s] that
-       contains the bytes from index [~first] (defaults to [0])
-       to index [~last] (defaults to [String.length s - 1]).
+  (** [with_index_range ~first ~last s] are the consecutive bytes of
+      [s] whose indices exist in the range \[[first];[last]\].
 
-       @raise Invalid_argument if [first] or [last] are not {{!idxpos}valid
-       indices} of [s] or if [last < first]. *)
+      [first] defaults to [0] and [last] to [String.length s - 1].
+
+      Note that both [first] and [last] can be any integer. If
+      [first > last] the interval is empty and the empty string
+      is returned. *)
 
   val slice : ?start:int -> ?stop:int -> string -> string
   (** [slice ~start ~stop s] is a string with the bytes of [s] that
@@ -496,6 +492,10 @@ module String : sig
 
       A substring defines a possibly empty subsequence of bytes in
       a {e base} string.
+
+      Make sure you understand the basics about [string]
+      {{!idxpos}indices and positions}, they are essential
+      concepts to understand the semantics of functions.
 
       The subsequence is defined by a {e start} and a {e stop}
       {{!idxpos}position}. The former is always smaller or equal to
@@ -923,6 +923,26 @@ module String : sig
                             |                  overlap d c
 v}
   *)
+
+
+    (** {1:idxpos String indices and positions}
+
+{v
+positions  0   1   2   3   4    l-1    l
+           +---+---+---+---+     +-----+
+  indices  | 0 | 1 | 2 | 3 | ... | l-1 |
+           +---+---+---+---+     +-----+
+v}
+
+        A string [s] of length [l] is a zero-based indexed sequence of [l]
+        bytes. An index [i] is {e valid} in [s] if it is in the range
+        \[[0];[l-1]\], it represents the [i]th byte of [s].
+
+        Before each byte and after the last byte of [s] we have {e
+        positions}. Positions are labelled from left to right by
+        increasing numbers in the range \[[0];[l]\]. These are the {e
+        valid positions} of [s]. The [i]th byte index is between positions [i]
+        and [i+1]. *)
   end
 
   (** {1:ascii Strings as US-ASCII character sequences} *)
@@ -1216,26 +1236,6 @@ v}
   val to_float : string -> float option
   (** [to_float s] is a [float] from [s], if any. Relies
       on {!Pervasives.float_of_string}. *)
-
-
-  (** {1:idxpos String indices and positions}
-
-{v
-positions  0   1   2   3   4    l-1    l
-           +---+---+---+---+     +-----+
-  indices  | 0 | 1 | 2 | 3 | ... | l-1 |
-           +---+---+---+---+     +-----+
-v}
-
-    A string [s] of length [l] is a zero-based indexed sequence of [l]
-    bytes. An index [i] is {e valid} in [s] if it is in the range
-    \[[0];[l-1]\], it represents the [i]th byte of [s].
-
-    Before each byte and after the last byte of [s] we have {e
-    positions}. Positions are labelled from left to right by
-    increasing numbers in the range \[[0];[l]\]. These are the {e
-    valid positions} of [s]. The [i]th byte index is between positions [i]
-    and [i+1]. *)
 end
 
 (** {1:diff Differences with the OCaml [String] module}

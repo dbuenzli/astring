@@ -33,6 +33,9 @@ let err_neg_max max =
 let err_neg_min max =
   strf "negative ~min (%d)" max
 
+let err_neg_len len =
+  strf "negative length (%d)" len
+
 let err_min_max min max =
   strf "~min (%d) > ~max (%d)" min max
 
