@@ -438,54 +438,6 @@ let with_index_range = test "String.with_index_range" @@ fun () ->
   is_empty "abc" ~first:3 ~last:5;
   ()
 
-let slice = test "String.slice" @@ fun () ->
-  let no_alloc ?start ?stop s =
-    eq_bool (String.slice ?start ?stop s == s) true
-  in
-  no_alloc String.empty;
-  no_alloc "abcd";
-  no_alloc ~start:0 ~stop:4 "abcd";
-  no_alloc ~stop:4 "abcd";
-  no_alloc ~start:0 "abcd";
-  eq_str (String.slice ~start:0 ~stop:0 "") "";
-  eq_str (String.slice ~start:(-1) ~stop:0 "") "";
-  eq_str (String.slice ~start:0 ~stop:(-1) "") "";
-  eq_str (String.slice ~start:1 ~stop:(-1) "") "";
-  eq_str (String.slice ~start:(-244) ~stop:(-455) "") "";
-  no_alloc "abcd" ~start:0;
-  eq_str (String.slice "abcd" ~start:1) "bcd";
-  eq_str (String.slice "abcd" ~start:2) "cd";
-  eq_str (String.slice "abcd" ~start:3) "d";
-  eq_str (String.slice "abcd" ~start:4) "";
-  eq_str (String.slice "abcd" ~start:5) "";
-  eq_str (String.slice "abcd" ~start:(-1)) "d";
-  eq_str (String.slice "abcd" ~start:(-2)) "cd";
-  eq_str (String.slice "abcd" ~start:(-3)) "bcd";
-  no_alloc "abcd" ~start:(-4);
-  no_alloc "abcd"~start:(-5);
-  eq_str (String.slice "abcd" ~stop:0) "";
-  eq_str (String.slice "abcd" ~stop:1) "a";
-  eq_str (String.slice "abcd" ~stop:2) "ab";
-  eq_str (String.slice "abcd" ~stop:3) "abc";
-  no_alloc "abcd" ~stop:4;
-  no_alloc "abcd" ~stop:5;
-  eq_str (String.slice "abcd" ~stop:(-1)) "abc";
-  eq_str (String.slice "abcd" ~stop:(-2)) "ab";
-  eq_str (String.slice "abcd" ~stop:(-3)) "a";
-  eq_str (String.slice "abcd" ~stop:(-4)) "";
-  eq_str (String.slice "abcd" ~stop:(-5)) "";
-  eq_str (String.slice "abcd" ~start:(-1) ~stop:2) "";
-  eq_str (String.slice "abcd" ~start:(-1) ~stop:(-1)) "";
-  eq_str (String.slice "abcd" ~start:(-2) ~stop:(-1)) "c";
-  eq_str (String.slice "abcd" ~start:2 ~stop:3) "c";
-  eq_str (String.slice "abcd" ~start:23423 ~stop:2342) "";
-  eq_str (String.slice "abcd" ~start:(-3)) "bcd";
-  eq_str (String.slice "abc" ~start:(-3)) "abc";
-  eq_str (String.slice "ab" ~start:(-3)) "ab";
-  eq_str (String.slice "a" ~start:(-3)) "a";
-  eq_str (String.slice "" ~start:(-3)) "";
-  ()
-
 let trim = test "String.trim" @@ fun () ->
   let drop_a c = c = 'a' in
   let no_alloc ?drop s = eq_bool (String.trim ?drop s == s) true in
@@ -1278,7 +1230,6 @@ let suite = suite "String functions"
       compare;
       with_range;
       with_index_range;
-      slice;
       trim;
       span;
       min_span;

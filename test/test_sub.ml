@@ -741,49 +741,6 @@ let with_index_range = test "String.Sub.with_index_range" @@ fun () ->
   invalid abc ~first:(-1) ~last:0;
   ()
 
-let slice = test "String.Sub.slice" @@ fun () ->
-  let base = "00abcd1234" in
-  let abcd = String.sub ~start:2 ~stop:6 base in
-  let abc = String.sub ~start:2 ~stop:5 base in
-  let ab = String.sub ~start:2 ~stop:4 base in
-  let a = String.sub ~start:2 ~stop:3 base in
-  let empty = String.sub ~start:2 ~stop:2 base in
-  eqs (String.Sub.slice ~start:0 ~stop:0 empty) "";
-  eqs (String.Sub.slice ~start:(-1) ~stop:0 empty) "";
-  eqs (String.Sub.slice ~start:0 ~stop:(-1) empty) "";
-  eqs (String.Sub.slice ~start:1 ~stop:(-1) empty) "";
-  eqs (String.Sub.slice ~start:(-244) ~stop:(-455) empty) "";
-  eqs (String.Sub.slice abcd ~start:1) "bcd";
-  eqs (String.Sub.slice abcd ~start:2) "cd";
-  eqs (String.Sub.slice abcd ~start:3) "d";
-  eqs (String.Sub.slice abcd ~start:4) "";
-  eqs (String.Sub.slice abcd ~start:5) "";
-  eqs (String.Sub.slice abcd ~start:(-1)) "d";
-  eqs (String.Sub.slice abcd ~start:(-2)) "cd";
-  eqs (String.Sub.slice abcd ~start:(-3)) "bcd";
-  eqs (String.Sub.slice abcd ~stop:0) "";
-  eqs (String.Sub.slice abcd ~stop:1) "a";
-  eqs (String.Sub.slice abcd ~stop:2) "ab";
-  eqs (String.Sub.slice abcd ~stop:3) "abc";
-  eqs (String.Sub.slice abcd ~stop:(-1)) "abc";
-  eqs (String.Sub.slice abcd ~stop:(-2)) "ab";
-  eqs (String.Sub.slice abcd ~stop:(-3)) "a";
-  eqs (String.Sub.slice abcd ~stop:(-4)) "";
-  eqs (String.Sub.slice abcd ~stop:(-5)) "";
-  eqs (String.Sub.slice abcd ~start:(-1) ~stop:2) "";
-  eqs (String.Sub.slice abcd ~start:(-1) ~stop:(-1)) "";
-  eqs (String.Sub.slice abcd ~start:(-2) ~stop:(-1)) "c";
-  eqs (String.Sub.slice abcd ~start:2 ~stop:3) "c";
-  eqs (String.Sub.slice abcd ~start:23423 ~stop:2342) "";
-  eqs (String.Sub.slice abcd ~start:(-3)) "bcd";
-  eqs (String.Sub.slice abc ~start:(-3)) "abc";
-  eqs (String.Sub.slice ab ~start:(-3)) "ab";
-  eqs (String.Sub.slice a ~start:(-3)) "a";
-  eqs (String.Sub.slice empty ~start:(-3)) "";
-  empty_pos (String.Sub.slice abcd ~start:1 ~stop:0) 2;
-  empty_pos (String.Sub.slice abcd ~start:1 ~stop:1) 3;
-  ()
-
 let trim = test "String.Sub.trim" @@ fun () ->
   let drop_a c = c = 'a' in
   let base = "00aaaabcdaaaa00" in
@@ -1186,7 +1143,6 @@ let suite = suite "Base String functions"
       drop;
       with_range;
       with_index_range;
-      slice;
       trim;
       cut;
       cuts;

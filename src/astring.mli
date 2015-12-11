@@ -311,22 +311,6 @@ module String : sig
       [first > last] the interval is empty and the empty string
       is returned. *)
 
-  val slice : ?start:int -> ?stop:int -> string -> string
-  (** [slice ~start ~stop s] is a string with the bytes of [s] that
-      are delimited by positions [start] and [stop].  [start] defaults
-      to [0] and [stop] to [String.length s].
-
-      If [start] or [stop] are negative they are subtracted from the
-      [String.length s] position. This means that [-1] denotes the
-      penultimate position of the string. If [start] or [stop] are
-      invalid positions in [s] they are clipped to the nearest
-      valid position. If [stop < start] an empty string is returned.
-
-      These properties make [slice] an expressive function. For
-      exemple [slice ~stop:3 s] and [slice ~start:(-3) s] respectively
-      return the first three and last three bytes of [s] or [s] if it
-      has less than three bytes. *)
-
   val trim : ?drop:(char -> bool) -> string -> string
   (** [trim ~drop s] is [s] with prefix and suffix bytes satisfying
       [drop] in [s] removed. [drop] defaults to {!Char.Ascii.is_white}. *)
@@ -637,10 +621,6 @@ module String : sig
 
     val with_index_range : ?first:int -> ?last:int -> sub -> sub
     (** [with_index_range] is like {!String.with_index_range} *)
-
-    val slice : ?start:int -> ?stop:int -> sub -> sub
-    (** [slice] is like {!String.slice}. If [stop < start] returns
-        the empty string at the start of the argument. *)
 
     val trim : ?drop:(char -> bool) -> sub -> sub
     (** [trim] is like {!String.trim}. If all bytes are dropped returns

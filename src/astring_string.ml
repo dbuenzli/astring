@@ -152,16 +152,6 @@ let with_index_range ?(first = 0) ?last s =
   if first = 0 && last = max_idx then s else
   unsafe_string_sub s first (last + 1 - first)
 
-let slice ?(start = 0) ?stop s =
-  let max_pos = length s in
-  let clip_pos p = if p < 0 then 0 else if p > max_pos then max_pos else p in
-  let start = clip_pos (if start < 0 then max_pos + start else start) in
-  let stop = match stop with None -> max_pos | Some stop -> stop in
-  let stop = clip_pos (if stop < 0 then max_pos + stop else stop) in
-  if start >= stop then empty else
-  if start = 0 && stop = max_pos then s else
-  unsafe_string_sub s start (stop - start)
-
 let trim ?(drop = Astring_char.Ascii.is_white) s =
   let max_pos = length s in
   if max_pos = 0 then s else

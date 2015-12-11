@@ -333,16 +333,6 @@ let with_index_range ?(first = 0) ?last (base, sub_start, sub_stop) =
   then invalid_arg (err_index_range first last sub_len)
   else (base, sub_start + first, sub_start + last + 1)
 
-let slice ?(start = 0) ?stop (base, sub_start, sub_stop as sub) =
-  let max_pos = sub_stop - sub_start in
-  let clip_pos p = if p < 0 then 0 else if p > max_pos then max_pos else p in
-  let start = clip_pos (if start < 0 then max_pos + start else start) in
-  let stop = match stop with None -> max_pos | Some stop -> stop in
-  let stop = clip_pos (if stop < 0 then max_pos + stop else stop) in
-  if start > stop then (base, sub_start, sub_start) else
-  if start = 0 && stop = max_pos then sub else
-  (base, sub_start + start, sub_start + stop)
-
 let trim ?(drop = Astring_char.Ascii.is_white) (s, start, stop as sub) =
   let len = stop - start in
   if len = 0 then sub else
