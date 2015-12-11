@@ -287,40 +287,6 @@ module String : sig
   (** [compare s s'] is [Pervasives.compare s s'], it compares the
       byte sequences of [s] and [s'] in lexicographical order. *)
 
-  (** {1 Finding and filtering bytes} *)
-
-  val find : ?rev:bool -> ?start:int -> (char -> bool) -> string -> int option
-  (** [find ~rev ~start sat s] is:
-      {ul
-      {- If [rev] is [false] (default). The smallest index [i], if any,
-         greater or equal to [start] such that [sat s.[i]] is [true].
-         [start] defaults to [0].}
-      {- If [rev] is [true]. The greatest index [i], if any, smaller or equal
-         to [start] such that [sat s.[i]] is [true].
-         [start] defaults to [String.length s - 1].}}
-      Note that [start] can be any integer. *)
-
-  val find_sub :?rev:bool -> ?start:int -> sub:string -> string -> int option
-  (** [find_sub ~rev ~start ~sub s] is:
-      {ul
-      {- If [rev] is [false] (default). The smallest index [i], if any,
-         greater or equal to [start] such that [sub] can be found starting
-         at [i] in [s] that is [s.[i] = sub.[0]], [s.[i+1] = sub.[1]], ...
-         [start] defaults to [0].}
-      {- If [rev] is [true]. The greatest index [i], if any, smaller
-         or equal to [start] such that [sub] can be found starting at
-         [i] in [s] that is [s.[i] = sub.[0]], [s.[i+1] = sub.[1]], ...
-         [start] defaults to [String.length s - 1].}}
-      Note that [start] can be any integer. *)
-
-  val filter : (char -> bool) -> string -> string
-  (** [filter sat s] is the string made of the bytes of [s] that satisfy [sat],
-      in the same order. *)
-
-  val filter_map : (char -> char option) -> string -> string
-  (** [filter_map f s] is the string made of the bytes of [s] as mapped by
-      [f], in order. *)
-
   (** {1:extract Extracting substrings}
 
       {b Tip.} These functions extract substrings as new strings. Using
@@ -658,22 +624,6 @@ module String : sig
         @raise Invalid_argument if [s] and [s'] are not on the same base
         according to physical equality. *)
 
-    (** {1:find Finding and filtering bytes}  *)
-
-    val find : ?rev:bool -> (char -> bool) -> sub -> sub option
-    (** [find ~rev sat s] is the substring of [s] (if any) that spans the
-        first byte that satisfies [sat] in [s] after position [start s]
-        ([rev] is [false], default) or before [stop s] ([rev] is [true]).
-        [None] is returned if there is no matching byte in [s]. *)
-
-    val find_sub :?rev:bool -> sub:sub -> sub -> sub option
-    (** [find_sub ~rev ~sub s] is the substring of [s] (if any) that
-        spans the first match of [sub] in [s] after position [start s]
-        ([rev] is [false], defaults) or before [stop s] ([rev] is
-        [false]). Only bytes are compared and [sub] can be on a
-        different base. [None] is returned if there is no match of
-        [sub] in [s]. *)
-
     (** {1:extract Extracting substrings}
 
         The extracted substrings are on the same base as the substring
@@ -751,12 +701,19 @@ module String : sig
 
     (** {1:traverse Traversing substrings} *)
 
-    val iter : (char -> unit) -> sub -> unit
-    (** [iter] is like {!String.iter}. *)
+    val find : ?rev:bool -> (char -> bool) -> sub -> sub option
+    (** [find ~rev sat s] is the substring of [s] (if any) that spans the
+        first byte that satisfies [sat] in [s] after position [start s]
+        ([rev] is [false], default) or before [stop s] ([rev] is [true]).
+        [None] is returned if there is no matching byte in [s]. *)
 
-    val iteri : (int -> char -> unit) -> sub -> unit
-    (** [iteri] is like {!String.iteri}, indices are the substring's
-        zero-based ones. *)
+    val find_sub :?rev:bool -> sub:sub -> sub -> sub option
+    (** [find_sub ~rev ~sub s] is the substring of [s] (if any) that
+        spans the first match of [sub] in [s] after position [start s]
+        ([rev] is [false], defaults) or before [stop s] ([rev] is
+        [false]). Only bytes are compared and [sub] can be on a
+        different base. [None] is returned if there is no match of
+        [sub] in [s]. *)
 
     val map : (char -> char) -> sub -> sub
     (** [map] is like {!String.map}. The result is on a new base that
@@ -771,6 +728,13 @@ module String : sig
 
     val fold_right : (char -> 'a -> 'a) -> sub -> 'a -> 'a
     (** [fold_right] is like {!String.fold_right}. *)
+
+    val iter : (char -> unit) -> sub -> unit
+    (** [iter] is like {!String.iter}. *)
+
+    val iteri : (int -> char -> unit) -> sub -> unit
+    (** [iteri] is like {!String.iteri}, indices are the substring's
+        zero-based ones. *)
 
     (** {1:pp Pretty printing} *)
 
@@ -912,13 +876,37 @@ v}
 
   (** {1:traverse Traversing strings} *)
 
-  val iter : (char -> unit) -> string -> unit
-  (** [iter f s] is [f s.[0]; f s.[1];] ...
-      [f s.[m]] with [m = String.length s - 1]. *)
+  val find : ?rev:bool -> ?start:int -> (char -> bool) -> string -> int option
+  (** [find ~rev ~start sat s] is:
+      {ul
+      {- If [rev] is [false] (default). The smallest index [i], if any,
+         greater or equal to [start] such that [sat s.[i]] is [true].
+         [start] defaults to [0].}
+      {- If [rev] is [true]. The greatest index [i], if any, smaller or equal
+         to [start] such that [sat s.[i]] is [true].
+         [start] defaults to [String.length s - 1].}}
+      Note that [start] can be any integer. *)
 
-  val iteri : (int -> char -> unit) -> string -> unit
-  (** [iteri f s] is [f 0 s.[0]; f 1 s.[1];] ...
-      [f m s.[m]] with [m = String.length s - 1]. *)
+  val find_sub :?rev:bool -> ?start:int -> sub:string -> string -> int option
+  (** [find_sub ~rev ~start ~sub s] is:
+      {ul
+      {- If [rev] is [false] (default). The smallest index [i], if any,
+         greater or equal to [start] such that [sub] can be found starting
+         at [i] in [s] that is [s.[i] = sub.[0]], [s.[i+1] = sub.[1]], ...
+         [start] defaults to [0].}
+      {- If [rev] is [true]. The greatest index [i], if any, smaller
+         or equal to [start] such that [sub] can be found starting at
+         [i] in [s] that is [s.[i] = sub.[0]], [s.[i+1] = sub.[1]], ...
+         [start] defaults to [String.length s - 1].}}
+      Note that [start] can be any integer. *)
+
+  val filter : (char -> bool) -> string -> string
+  (** [filter sat s] is the string made of the bytes of [s] that satisfy [sat],
+      in the same order. *)
+
+  val filter_map : (char -> char option) -> string -> string
+  (** [filter_map f s] is the string made of the bytes of [s] as mapped by
+      [f], in order. *)
 
   val map : (char -> char) -> string -> string
   (** [map f s] is [s'] with [s'.[i] = f s.[i]] for all indices [i]
@@ -937,6 +925,14 @@ v}
   (** [fold_right f s acc] is
       [f s.[0] (f s.[1] (]...[(f s.[m] acc) )]...[)]
       with [m = String.length s - 1]. *)
+
+  val iter : (char -> unit) -> string -> unit
+  (** [iter f s] is [f s.[0]; f s.[1];] ...
+      [f s.[m]] with [m = String.length s - 1]. *)
+
+  val iteri : (int -> char -> unit) -> string -> unit
+  (** [iteri f s] is [f 0 s.[0]; f 1 s.[1];] ...
+      [f m s.[m]] with [m = String.length s - 1]. *)
 
   (** {1:ascii Strings as US-ASCII character sequences} *)
 

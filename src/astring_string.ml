@@ -122,122 +122,6 @@ let exists sat s = Astring_base.exists sat s ~start:0 ~stop:(length s)
 let equal = string_equal
 let compare s0 s1 = Pervasives.compare s0 s1
 
-(* Finding and keeping bytes *)
-
-let ffind ?start sat s =
-  let max_idx = length s - 1 in
-  let rec loop i =
-    if i > max_idx then None else
-    if sat (unsafe_get s i) then Some i else loop (i + 1)
-  in
-  match start with
-  | None -> loop 0
-  | Some i when i < 0 -> loop 0
-  | Some i -> loop i
-
-let rfind ?start sat s =
-  let max_idx = length s - 1 in
-  let rec loop i =
-    if i < 0 then None else
-    if sat (unsafe_get s i) then Some i else loop (i - 1)
-  in
-  match start with
-  | None -> loop max_idx
-  | Some i when i > max_idx -> loop max_idx
-  | Some i -> loop i
-
-let find ?(rev = false) ?start sat s = match rev with
-| false -> ffind ?start sat s
-| true  -> rfind ?start sat s
-
-let ffind_sub ?start ~sub s =
-  let len_sub = length sub in
-  let len_s = length s in
-  let max_idx_sub = len_sub - 1 in
-  let max_idx_s = if len_sub <> 0 then len_s - len_sub else len_s - 1 in
-  let rec loop i k =
-    if i > max_idx_s then None else
-    if k > max_idx_sub then Some i else
-    if k > 0 then
-      if unsafe_get sub k = unsafe_get s (i + k)
-      then loop i (k + 1) else loop (i + 1) 0
-    else
-      if unsafe_get sub 0 = unsafe_get s i
-      then loop i 1 else loop (i + 1) 0
-  in
-  match start with
-  | None -> loop 0 0
-  | Some i when i < 0 -> loop 0 0
-  | Some i -> loop i 0
-
-let rfind_sub ?start ~sub s =
-  let len_sub = length sub in
-  let len_s = length s in
-  let max_idx_sub = len_sub - 1 in
-  let max_idx_s = if len_sub <> 0 then len_s - len_sub else len_s - 1 in
-  let rec loop i k =
-    if i < 0 then None else
-    if k > max_idx_sub then Some i else
-    if k > 0 then
-      if unsafe_get sub k = unsafe_get s (i + k)
-      then loop i (k + 1) else loop (i - 1) 0
-    else
-      if unsafe_get sub 0 = unsafe_get s i
-      then loop i 1 else loop (i - 1) 0
-  in
-  match start with
-  | None -> loop max_idx_s 0
-  | Some i when i > max_idx_s -> loop max_idx_s 0
-  | Some i -> loop i 0
-
-let find_sub ?(rev = false) ?start ~sub s = match rev with
-| false -> ffind_sub ?start ~sub s
-| true  -> rfind_sub ?start ~sub s
-
-let filter sat s =
-  let max_idx = length s - 1 in
-  let rec with_buf b k i = (* k is the write index in b *)
-    if i > max_idx then Bytes.sub_string b 0 k else
-    let c = unsafe_get s i in
-    if sat c then (bytes_unsafe_set b k c; with_buf b (k + 1) (i + 1)) else
-    with_buf b k (i + 1)
-  in
-  let rec try_no_alloc i =
-    if i > max_idx then s else
-    if (sat (unsafe_get s i)) then try_no_alloc (i + 1) else
-    if i = max_idx then unsafe_string_sub s 0 i else
-    let b = Bytes.of_string s in (* copy and overwrite starting from i *)
-    with_buf b i (i + 1)
-  in
-  try_no_alloc 0
-
-let filter_map f s =
-  let max_idx = length s - 1 in
-  let rec with_buf b k i = (* k is the write index in b *)
-    if i > max_idx then
-      (if k > max_idx then bytes_unsafe_to_string b else Bytes.sub_string b 0 k)
-    else
-    match f (unsafe_get s i) with
-    | None -> with_buf b k (i + 1)
-    | Some c -> bytes_unsafe_set b k c; with_buf b (k + 1) (i + 1)
-  in
-  let rec try_no_alloc i =
-    if i > max_idx then s else
-    let c = unsafe_get s i in
-    match f c with
-    | None ->
-        if i = max_idx then unsafe_string_sub s 0 i else
-        let b = Bytes.of_string s in
-        with_buf b i (i + 1)
-    | Some cm when cm <> c ->
-        let b = Bytes.of_string s in
-        bytes_unsafe_set b i cm;
-        with_buf b (i + 1) (i + 1)
-    | Some _ ->
-        try_no_alloc (i + 1)
-  in
-  try_no_alloc 0
-
 (* Extracting substrings *)
 
 let with_range ?(first = 0) ?(len = max_int) s =
@@ -490,8 +374,121 @@ let sub_with_index_range = Sub.of_string_with_index_range
 
 (* Traversing *)
 
-let iter f s = for i = 0 to length s - 1 do f (unsafe_get s i) done
-let iteri f s = for i = 0 to length s - 1 do f i (unsafe_get s i) done
+(* Finding and keeping bytes *)
+
+let ffind ?start sat s =
+  let max_idx = length s - 1 in
+  let rec loop i =
+    if i > max_idx then None else
+    if sat (unsafe_get s i) then Some i else loop (i + 1)
+  in
+  match start with
+  | None -> loop 0
+  | Some i when i < 0 -> loop 0
+  | Some i -> loop i
+
+let rfind ?start sat s =
+  let max_idx = length s - 1 in
+  let rec loop i =
+    if i < 0 then None else
+    if sat (unsafe_get s i) then Some i else loop (i - 1)
+  in
+  match start with
+  | None -> loop max_idx
+  | Some i when i > max_idx -> loop max_idx
+  | Some i -> loop i
+
+let find ?(rev = false) ?start sat s = match rev with
+| false -> ffind ?start sat s
+| true  -> rfind ?start sat s
+
+let ffind_sub ?start ~sub s =
+  let len_sub = length sub in
+  let len_s = length s in
+  let max_idx_sub = len_sub - 1 in
+  let max_idx_s = if len_sub <> 0 then len_s - len_sub else len_s - 1 in
+  let rec loop i k =
+    if i > max_idx_s then None else
+    if k > max_idx_sub then Some i else
+    if k > 0 then
+      if unsafe_get sub k = unsafe_get s (i + k)
+      then loop i (k + 1) else loop (i + 1) 0
+    else
+      if unsafe_get sub 0 = unsafe_get s i
+      then loop i 1 else loop (i + 1) 0
+  in
+  match start with
+  | None -> loop 0 0
+  | Some i when i < 0 -> loop 0 0
+  | Some i -> loop i 0
+
+let rfind_sub ?start ~sub s =
+  let len_sub = length sub in
+  let len_s = length s in
+  let max_idx_sub = len_sub - 1 in
+  let max_idx_s = if len_sub <> 0 then len_s - len_sub else len_s - 1 in
+  let rec loop i k =
+    if i < 0 then None else
+    if k > max_idx_sub then Some i else
+    if k > 0 then
+      if unsafe_get sub k = unsafe_get s (i + k)
+      then loop i (k + 1) else loop (i - 1) 0
+    else
+      if unsafe_get sub 0 = unsafe_get s i
+      then loop i 1 else loop (i - 1) 0
+  in
+  match start with
+  | None -> loop max_idx_s 0
+  | Some i when i > max_idx_s -> loop max_idx_s 0
+  | Some i -> loop i 0
+
+let find_sub ?(rev = false) ?start ~sub s = match rev with
+| false -> ffind_sub ?start ~sub s
+| true  -> rfind_sub ?start ~sub s
+
+let filter sat s =
+  let max_idx = length s - 1 in
+  let rec with_buf b k i = (* k is the write index in b *)
+    if i > max_idx then Bytes.sub_string b 0 k else
+    let c = unsafe_get s i in
+    if sat c then (bytes_unsafe_set b k c; with_buf b (k + 1) (i + 1)) else
+    with_buf b k (i + 1)
+  in
+  let rec try_no_alloc i =
+    if i > max_idx then s else
+    if (sat (unsafe_get s i)) then try_no_alloc (i + 1) else
+    if i = max_idx then unsafe_string_sub s 0 i else
+    let b = Bytes.of_string s in (* copy and overwrite starting from i *)
+    with_buf b i (i + 1)
+  in
+  try_no_alloc 0
+
+let filter_map f s =
+  let max_idx = length s - 1 in
+  let rec with_buf b k i = (* k is the write index in b *)
+    if i > max_idx then
+      (if k > max_idx then bytes_unsafe_to_string b else Bytes.sub_string b 0 k)
+    else
+    match f (unsafe_get s i) with
+    | None -> with_buf b k (i + 1)
+    | Some c -> bytes_unsafe_set b k c; with_buf b (k + 1) (i + 1)
+  in
+  let rec try_no_alloc i =
+    if i > max_idx then s else
+    let c = unsafe_get s i in
+    match f c with
+    | None ->
+        if i = max_idx then unsafe_string_sub s 0 i else
+        let b = Bytes.of_string s in
+        with_buf b i (i + 1)
+    | Some cm when cm <> c ->
+        let b = Bytes.of_string s in
+        bytes_unsafe_set b i cm;
+        with_buf b (i + 1) (i + 1)
+    | Some _ ->
+        try_no_alloc (i + 1)
+  in
+  try_no_alloc 0
 
 let map f s =
   let max_idx = length s - 1 in
@@ -536,6 +533,9 @@ let fold_left f acc s =
 
 let fold_right f s acc =
   Astring_base.fold_right f s acc ~start:0 ~stop:(length s)
+
+let iter f s = for i = 0 to length s - 1 do f (unsafe_get s i) done
+let iteri f s = for i = 0 to length s - 1 do f i (unsafe_get s i) done
 
 (* Strings as US-ASCII code point sequences *)
 

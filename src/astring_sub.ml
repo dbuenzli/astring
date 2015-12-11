@@ -316,56 +316,6 @@ let compare (s0, start0, stop0) (s1, start1, stop1) =
   if c <> 0 then c else
   compare_pos stop0 stop1
 
-(* Finding and parsing bytes *)
-
-let find ?(rev = false) sat (s, start, stop) =
-  if rev then begin
-    let rec loop i =
-      if i < start then None else
-      if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i - 1)
-    in
-    loop (stop - 1)
-  end else begin
-    let max_idx = stop - 1 in
-    let rec loop i =
-      if i > max_idx then None else
-      if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i + 1)
-    in
-    loop start
-  end
-
-let find_sub ?(rev = false) ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
-  let len_sub = sub_stop - sub_start in
-  let len_s = stop - start in
-  if len_sub > len_s then None else
-  let max_zidx_sub = len_sub - 1 in
-  if rev then begin
-    let rec loop i k =
-      if i < start then None else
-      if k > max_zidx_sub then Some (s, i, i + len_sub) else
-      if k > 0 then
-        if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
-        then loop i (k + 1)
-        else loop (i - 1) 0
-      else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
-      loop (i - 1) 0
-    in
-    loop (stop - len_sub) 0
-  end else begin
-    let max_idx_s = start + len_s - len_sub in
-    let rec loop i k =
-      if i > max_idx_s then None else
-      if k > max_zidx_sub then Some (s, i, i + len_sub) else
-      if k > 0 then
-        if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
-        then loop i (k + 1)
-        else loop (i + 1) 0
-      else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
-      loop (i + 1) 0
-    in
-    loop start 0
-  end
-
 (* Extracting substrings *)
 
 let with_range ?(first = 0) ?len (base, sub_start, sub_stop) =
@@ -588,11 +538,53 @@ let fields
 
 (* Traversing *)
 
-let iter f (s, start, stop) =
-  for i = start to stop - 1 do f (sunsafe_get s i) done
+let find ?(rev = false) sat (s, start, stop) =
+  if rev then begin
+    let rec loop i =
+      if i < start then None else
+      if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i - 1)
+    in
+    loop (stop - 1)
+  end else begin
+    let max_idx = stop - 1 in
+    let rec loop i =
+      if i > max_idx then None else
+      if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i + 1)
+    in
+    loop start
+  end
 
-let iteri f (s, start, stop)  =
-  for i = start to stop - 1 do f (i - start) (sunsafe_get s i) done
+let find_sub ?(rev = false) ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
+  let len_sub = sub_stop - sub_start in
+  let len_s = stop - start in
+  if len_sub > len_s then None else
+  let max_zidx_sub = len_sub - 1 in
+  if rev then begin
+    let rec loop i k =
+      if i < start then None else
+      if k > max_zidx_sub then Some (s, i, i + len_sub) else
+      if k > 0 then
+        if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
+        then loop i (k + 1)
+        else loop (i - 1) 0
+      else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
+      loop (i - 1) 0
+    in
+    loop (stop - len_sub) 0
+  end else begin
+    let max_idx_s = start + len_s - len_sub in
+    let rec loop i k =
+      if i > max_idx_s then None else
+      if k > max_zidx_sub then Some (s, i, i + len_sub) else
+      if k > 0 then
+        if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
+        then loop i (k + 1)
+        else loop (i + 1) 0
+      else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
+      loop (i + 1) 0
+    in
+    loop start 0
+  end
 
 let map f (s, start, stop) =
   let len = stop - start in
@@ -617,6 +609,12 @@ let fold_left f acc (s, start, stop) =
 
 let fold_right f (s, start, stop) acc =
   Astring_base.fold_right f s acc ~start ~stop
+
+let iter f (s, start, stop) =
+  for i = start to stop - 1 do f (sunsafe_get s i) done
+
+let iteri f (s, start, stop)  =
+  for i = start to stop - 1 do f (i - start) (sunsafe_get s i) done
 
 (* Pretty printing *)
 

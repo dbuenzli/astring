@@ -579,52 +579,7 @@ let compare = test "String.Sub.compare" @@ fun () ->
   eq_int (String.Sub.compare cd cd) 0;
   ()
 
-(* Finding and parsing *)
-
-let find = test "String.Sub.find" @@ fun () ->
-  let abcbd = "abcbd" in
-  let empty = String.sub ~start:3 ~stop:3 abcbd in
-  let a = String.sub ~start:0 ~stop:1 abcbd in
-  let ab = String.sub ~start:0 ~stop:2 abcbd in
-  let c = String.sub ~start:2 ~stop:3 abcbd in
-  let b0 = String.sub ~start:1 ~stop:2 abcbd in
-  let b1 = String.sub ~start:3 ~stop:4 abcbd in
-  let abcbd = String.sub abcbd in
-  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.dump_raw in
-  eq (String.Sub.find (fun c -> c = 'b') empty) None;
-  eq (String.Sub.find ~rev:true (fun c -> c = 'b') empty) None;
-  eq (String.Sub.find (fun c -> c = 'b') a) None;
-  eq (String.Sub.find ~rev:true (fun c -> c = 'b') a) None;
-  eq (String.Sub.find (fun c -> c = 'b') c) None;
-  eq (String.Sub.find ~rev:true (fun c -> c = 'b') c) None;
-  eq (String.Sub.find (fun c -> c = 'b') abcbd) (Some b0);
-  eq (String.Sub.find ~rev:true (fun c -> c = 'b') abcbd) (Some b1);
-  eq (String.Sub.find (fun c -> c = 'b') ab) (Some b0);
-  eq (String.Sub.find ~rev:true (fun c -> c = 'b') ab) (Some b0);
-  ()
-
-let find_sub = test "String.Sub.find_sub" @@ fun () ->
-  let abcbd = "abcbd" in
-  let empty = String.sub ~start:3 ~stop:3 abcbd in
-  let ab = String.sub ~start:0 ~stop:2 abcbd in
-  let b0 = String.sub ~start:1 ~stop:2 abcbd in
-  let b1 = String.sub ~start:3 ~stop:4 abcbd in
-  let abcbd = String.sub abcbd in
-  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.dump_raw in
-  eq (String.Sub.find_sub ~sub:ab empty) None;
-  eq (String.Sub.find_sub ~rev:true ~sub:ab empty) None;
-  eq (String.Sub.find_sub ~sub:(String.sub "") empty) (Some empty);
-  eq (String.Sub.find_sub ~rev:true ~sub:(String.sub "") empty) (Some empty);
-  eq (String.Sub.find_sub ~sub:ab abcbd) (Some ab);
-  eq (String.Sub.find_sub ~rev:true ~sub:ab abcbd) (Some ab);
-  eq (String.Sub.find_sub ~sub:empty abcbd) (Some (String.Sub.start abcbd));
-  eq (String.Sub.find_sub ~rev:true ~sub:empty abcbd)
-    (Some (String.Sub.stop abcbd));
-  eq (String.Sub.find_sub ~sub:(String.sub "b") abcbd) (Some b0);
-  eq (String.Sub.find_sub ~rev:true ~sub:(String.sub "b") abcbd) (Some b1);
-  eq (String.Sub.find_sub ~sub:b1 ab) (Some b0);
-  eq (String.Sub.find_sub ~rev:true ~sub:b1 ab) (Some b0);
-  ()
+(* Extracting substrings *)
 
 let span = test "String.Sub.span" @@ fun () ->
   let eq_pair (l0, r0) (l1, r1) =
@@ -709,8 +664,6 @@ let drop = test "String.Sub.drop" @@ fun () ->
   eqs (String.Sub.drop ~rev:true ~sat:(Char.equal 'a') (String.sub "aabbaa"))
     "aabb";
   ()
-
-(* Extracting substrings *)
 
 let with_range = test "String.Sub.with_range" @@ fun () ->
   let invalid ?first ?len s =
@@ -1121,14 +1074,49 @@ let fields = test "String.Sub.fields" @@ fun () ->
 
 (* Traversing *)
 
-let iter = test "String.Sub.iter[i]" @@ fun () ->
-  let empty = String.Sub.v ~start:2 ~stop:2 "ab" in
-  let abc = String.Sub.v ~start:3 ~stop:6 "i34abcdbbb" in
-  String.Sub.iter (fun _ -> fail "invoked") empty;
-  String.Sub.iteri (fun _ _ -> fail "invoked") empty;
-  (let i = ref 0 in
-   String.Sub.iter (fun c -> eq_char (String.Sub.get abc !i) c; incr i) abc);
-  String.Sub.iteri (fun i c -> eq_char (String.Sub.get abc i) c) abc;
+let find = test "String.Sub.find" @@ fun () ->
+  let abcbd = "abcbd" in
+  let empty = String.sub ~start:3 ~stop:3 abcbd in
+  let a = String.sub ~start:0 ~stop:1 abcbd in
+  let ab = String.sub ~start:0 ~stop:2 abcbd in
+  let c = String.sub ~start:2 ~stop:3 abcbd in
+  let b0 = String.sub ~start:1 ~stop:2 abcbd in
+  let b1 = String.sub ~start:3 ~stop:4 abcbd in
+  let abcbd = String.sub abcbd in
+  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.dump_raw in
+  eq (String.Sub.find (fun c -> c = 'b') empty) None;
+  eq (String.Sub.find ~rev:true (fun c -> c = 'b') empty) None;
+  eq (String.Sub.find (fun c -> c = 'b') a) None;
+  eq (String.Sub.find ~rev:true (fun c -> c = 'b') a) None;
+  eq (String.Sub.find (fun c -> c = 'b') c) None;
+  eq (String.Sub.find ~rev:true (fun c -> c = 'b') c) None;
+  eq (String.Sub.find (fun c -> c = 'b') abcbd) (Some b0);
+  eq (String.Sub.find ~rev:true (fun c -> c = 'b') abcbd) (Some b1);
+  eq (String.Sub.find (fun c -> c = 'b') ab) (Some b0);
+  eq (String.Sub.find ~rev:true (fun c -> c = 'b') ab) (Some b0);
+  ()
+
+let find_sub = test "String.Sub.find_sub" @@ fun () ->
+  let abcbd = "abcbd" in
+  let empty = String.sub ~start:3 ~stop:3 abcbd in
+  let ab = String.sub ~start:0 ~stop:2 abcbd in
+  let b0 = String.sub ~start:1 ~stop:2 abcbd in
+  let b1 = String.sub ~start:3 ~stop:4 abcbd in
+  let abcbd = String.sub abcbd in
+  let eq = eq_option ~eq:String.Sub.equal ~pp:String.Sub.dump_raw in
+  eq (String.Sub.find_sub ~sub:ab empty) None;
+  eq (String.Sub.find_sub ~rev:true ~sub:ab empty) None;
+  eq (String.Sub.find_sub ~sub:(String.sub "") empty) (Some empty);
+  eq (String.Sub.find_sub ~rev:true ~sub:(String.sub "") empty) (Some empty);
+  eq (String.Sub.find_sub ~sub:ab abcbd) (Some ab);
+  eq (String.Sub.find_sub ~rev:true ~sub:ab abcbd) (Some ab);
+  eq (String.Sub.find_sub ~sub:empty abcbd) (Some (String.Sub.start abcbd));
+  eq (String.Sub.find_sub ~rev:true ~sub:empty abcbd)
+    (Some (String.Sub.stop abcbd));
+  eq (String.Sub.find_sub ~sub:(String.sub "b") abcbd) (Some b0);
+  eq (String.Sub.find_sub ~rev:true ~sub:(String.sub "b") abcbd) (Some b1);
+  eq (String.Sub.find_sub ~sub:b1 ab) (Some b0);
+  eq (String.Sub.find_sub ~rev:true ~sub:b1 ab) (Some b0);
   ()
 
 let map = test "String.Sub.map[i]" @@ fun () ->
@@ -1156,6 +1144,18 @@ let fold = test "String.Sub.fold_{left,right}" @@ fun () ->
   eql (String.Sub.fold_right (fun c acc -> c :: acc) abc []) ['a';'b';'c'];
   ()
 
+let iter = test "String.Sub.iter[i]" @@ fun () ->
+  let empty = String.Sub.v ~start:2 ~stop:2 "ab" in
+  let abc = String.Sub.v ~start:3 ~stop:6 "i34abcdbbb" in
+  String.Sub.iter (fun _ -> fail "invoked") empty;
+  String.Sub.iteri (fun _ _ -> fail "invoked") empty;
+  (let i = ref 0 in
+   String.Sub.iter (fun c -> eq_char (String.Sub.get abc !i) c; incr i) abc);
+  String.Sub.iteri (fun i c -> eq_char (String.Sub.get abc i) c) abc;
+  ()
+
+(* Suite *)
+
 let suite = suite "Base String functions"
     [ misc;
       head;
@@ -1181,8 +1181,6 @@ let suite = suite "Base String functions"
       compare_bytes;
       equal;
       compare;
-      find;
-      find_sub;
       span;
       min_span;
       drop;
@@ -1193,9 +1191,11 @@ let suite = suite "Base String functions"
       cut;
       cuts;
       fields;
-      iter;
+      find;
+      find_sub;
       map;
-      fold; ]
+      fold;
+      iter; ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.
