@@ -8,11 +8,6 @@ open Astring_unsafe
 
 let strf = Format.asprintf
 
-(* Errors *)
-
-let err_start pos s =
-  strf "invalid start position: %d not in [0;%d]" pos (string_length s)
-
 (* String *)
 
 type t = string
@@ -244,12 +239,6 @@ let filter_map f s =
   try_no_alloc 0
 
 (* Extracting substrings *)
-
-let make_sub s ~start ~stop =
-  let len = stop - start in
-  if len = 0 then empty else
-  if start = 0 && len = length s then s else
-  unsafe_string_sub s start (stop - start)
 
 let with_range ?(first = 0) ?(len = max_int) s =
   if len < 0 then invalid_arg (Astring_base.err_neg_len len) else
@@ -496,8 +485,7 @@ type sub = Astring_sub.t
 module Sub = Astring_sub
 
 let sub = Sub.of_string_with_pos_range
-let sub_with_pos_range = Sub.of_string_with_pos_range
-let sub_with_pos_len = Sub.of_string_with_pos_len
+let sub_with_range = Sub.of_string_with_range
 let sub_with_index_range = Sub.of_string_with_index_range
 
 (* Traversing *)

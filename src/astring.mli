@@ -440,34 +440,6 @@ module String : sig
       [false] (defaults to [true]). [is_sep] defaults to
       {!Char.Ascii.is_white}. *)
 
-  (** {1:traverse Traversing strings} *)
-
-  val iter : (char -> unit) -> string -> unit
-  (** [iter f s] is [f s.[0]; f s.[1];] ...
-      [f s.[m]] with [m = String.length s - 1]. *)
-
-  val iteri : (int -> char -> unit) -> string -> unit
-  (** [iteri f s] is [f 0 s.[0]; f 1 s.[1];] ...
-      [f m s.[m]] with [m = String.length s - 1]. *)
-
-  val map : (char -> char) -> string -> string
-  (** [map f s] is [s'] with [s'.[i] = f s.[i]] for all indices [i]
-      of [s]. [f] is invoked in increasing index order. *)
-
-  val mapi : (int -> char -> char) -> string -> string
-  (** [mapi f s] is [s'] with [s'.[i] = f i s.[i]] for all indices [i]
-      of [s]. [f] is invoked in increasing index order. *)
-
-  val fold_left : ('a -> char -> 'a) -> 'a -> string -> 'a
-  (** [fold_left f acc s] is
-      [f (]...[(f (f acc s.[0]) s.[1])]...[) s.[m]]
-      with [m = String.length s - 1]. *)
-
-  val fold_right : (char -> 'a -> 'a) -> string -> 'a -> 'a
-  (** [fold_right f s acc] is
-      [f s.[0] (f s.[1] (]...[(f s.[m] acc) )]...[)]
-      with [m = String.length s - 1]. *)
-
   (** {1:subs Substrings} *)
 
   type sub
@@ -476,12 +448,8 @@ module String : sig
   val sub : ?start:int -> ?stop:int -> string -> sub
   (** [sub] is {!Sub.v}. *)
 
-  val sub_with_pos_range : ?start:int -> ?stop:int -> string -> sub
-  (** [sub_with_pos_range] is like {!with_pos_range} but returns
-      a substring value. *)
-
-  val sub_with_pos_len : ?start:int -> ?len:int -> string -> sub
-  (** [sub_with_pos_len] is like {!with_pos_len} but returns
+  val sub_with_range : ?first:int -> ?len:int -> string -> sub
+  (** [sub_with_range] is like {!with_range} but returns
       a substring value. *)
 
   val sub_with_index_range : ?first:int -> ?last:int -> string -> sub
@@ -714,11 +682,8 @@ module String : sig
         resulting substrings extents ({!start_pos}, {!stop_pos}) are
         expressed as positions on the base string of [s]. *)
 
-    val with_pos_range : ?start:int -> ?stop:int -> sub -> sub
-    (** [with_pos_range] is like {!String.with_pos_range}. *)
-
-    val with_pos_len : ?start:int -> ?len:int -> sub -> sub
-    (** [with_pos_len] is like {!String.with_pos_len}. *)
+    val with_range : ?first:int -> ?len:int -> sub -> sub
+    (** [with_range] is like {!String.with_range}. *)
 
     val with_index_range : ?first:int -> ?last:int -> sub -> sub
     (** [with_index_range] is like {!String.with_index_range} *)
@@ -944,6 +909,34 @@ v}
         valid positions} of [s]. The [i]th byte index is between positions [i]
         and [i+1]. *)
   end
+
+  (** {1:traverse Traversing strings} *)
+
+  val iter : (char -> unit) -> string -> unit
+  (** [iter f s] is [f s.[0]; f s.[1];] ...
+      [f s.[m]] with [m = String.length s - 1]. *)
+
+  val iteri : (int -> char -> unit) -> string -> unit
+  (** [iteri f s] is [f 0 s.[0]; f 1 s.[1];] ...
+      [f m s.[m]] with [m = String.length s - 1]. *)
+
+  val map : (char -> char) -> string -> string
+  (** [map f s] is [s'] with [s'.[i] = f s.[i]] for all indices [i]
+      of [s]. [f] is invoked in increasing index order. *)
+
+  val mapi : (int -> char -> char) -> string -> string
+  (** [mapi f s] is [s'] with [s'.[i] = f i s.[i]] for all indices [i]
+      of [s]. [f] is invoked in increasing index order. *)
+
+  val fold_left : ('a -> char -> 'a) -> 'a -> string -> 'a
+  (** [fold_left f acc s] is
+      [f (]...[(f (f acc s.[0]) s.[1])]...[) s.[m]]
+      with [m = String.length s - 1]. *)
+
+  val fold_right : (char -> 'a -> 'a) -> string -> 'a -> 'a
+  (** [fold_right f s acc] is
+      [f s.[0] (f s.[1] (]...[(f s.[m] acc) )]...[)]
+      with [m = String.length s - 1]. *)
 
   (** {1:ascii Strings as US-ASCII character sequences} *)
 

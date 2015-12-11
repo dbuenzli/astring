@@ -16,16 +16,55 @@ let err_empty_sub pos = strf "empty substring [%d;%d]" pos pos
 
 (* From strings *)
 
+let err_pos_range start stop len =
+  strf "invalid start:%d stop:%d for position range [0;%d]" start stop len
+
+let err_pos_len start len s_len =
+  strf "invalid start:%d len:%d for position range [0;%d]" start len s_len
+
+let err_index_range first last len =
+  strf "invalid first:%d last:%d for position range [0;%d]" first last len
+
+let with_pos_range make_sub ?(start = 0) ?stop s =
+  let s_len = string_length s in
+  let stop = match stop with None -> s_len | Some stop -> stop in
+  if start < 0 || stop > s_len || stop < start
+  then invalid_arg (err_pos_range start stop s_len)
+  else make_sub s ~start ~stop
+
+let with_pos_len make_sub ?(start = 0) ?len s =
+  let s_len = string_length s in
+  let len = match len with None -> s_len - start | Some l -> l in
+  let stop = start + len in
+  if start < 0 || stop > s_len || stop < start
+  then invalid_arg (err_pos_len start len s_len)
+  else make_sub s ~start ~stop
+
+let with_index_range make_sub ?(first = 0) ?last s =
+  let s_len = string_length s in
+  let last = match last with None -> s_len - 1 | Some l -> l in
+  if first < 0 || last > s_len - 1 || last < first
+  then invalid_arg (err_index_range first last s_len)
+  else make_sub s ~start:first ~stop:(last + 1)
+
 let make_sub s ~start ~stop = (s, start, stop)
 
 let of_string_with_pos_range ?start ?stop s =
-  Astring_base.with_pos_range make_sub ?start ?stop s
+  with_pos_range make_sub ?start ?stop s
 
-let of_string_with_pos_len ?start ?len s =
-  Astring_base.with_pos_len make_sub ?start ?len s
+let of_string_with_range ?first ?len s =
+  with_pos_len make_sub ?start:first ?len s
 
 let of_string_with_index_range ?first ?last s =
-  Astring_base.with_index_range make_sub ?first ?last s
+  with_index_range make_sub ?first ?last s
+
+let with_pos_len make_sub ?(start = 0) ?len s =
+  let s_len = string_length s in
+  let len = match len with None -> s_len - start | Some l -> l in
+  let stop = start + len in
+  if start < 0 || stop > s_len || stop < start
+  then invalid_arg (err_pos_len start len s_len)
+  else make_sub s ~start ~stop
 
 (* Substrings *)
 
@@ -329,26 +368,19 @@ let find_sub ?(rev = false) ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
 
 (* Extracting substrings *)
 
-let with_pos_range ?(start = 0) ?stop (base, sub_start, sub_stop) =
+let with_range ?(first = 0) ?len (base, sub_start, sub_stop) =
   let sub_len = sub_stop - sub_start in
-  let stop = match stop with None -> sub_len | Some stop -> stop in
-  if start < 0 || stop > sub_len || stop < start
-  then invalid_arg (Astring_base.err_pos_range start stop sub_len)
-  else (base, sub_start + start, sub_start + stop)
-
-let with_pos_len ?(start = 0) ?len (base, sub_start, sub_stop) =
-  let sub_len = sub_stop - sub_start in
-  let len = match len with None -> sub_len - start | Some l -> l in
-  let stop = start + len in
-  if start < 0 || stop > sub_len || stop < start
-  then invalid_arg (Astring_base.err_pos_len start len sub_len)
-  else (base, sub_start + start, sub_start + stop)
+  let len = match len with None -> sub_len - first | Some l -> l in
+  let stop = first + len in
+  if first < 0 || stop > sub_len || stop < first
+  then invalid_arg (err_pos_len first len sub_len)
+  else (base, sub_start + first, sub_start + stop)
 
 let with_index_range ?(first = 0) ?last (base, sub_start, sub_stop) =
   let sub_len = sub_stop - sub_start in
   let last = match last with None -> sub_len - 1 | Some l -> l in
   if first < 0 || last > sub_len - 1 || last < first
-  then invalid_arg (Astring_base.err_index_range first last sub_len)
+  then invalid_arg (err_index_range first last sub_len)
   else (base, sub_start + first, sub_start + last + 1)
 
 let slice ?(start = 0) ?stop (base, sub_start, sub_stop as sub) =

@@ -344,9 +344,9 @@ let append = test "String.Sub.append" @@ fun () ->
   ()
 
 let concat = test "String.Sub.concat" @@ fun () ->
-  let dash = String.sub_with_pos_len ~start:2 ~len:1 "ab-d" in
-  let ddash = String.sub_with_pos_len ~start:1 ~len:2 "a--d" in
-  let empty = String.sub_with_pos_len ~start:2 ~len:0 "ab-d" in
+  let dash = String.sub_with_range ~first:2 ~len:1 "ab-d" in
+  let ddash = String.sub_with_range ~first:1 ~len:2 "a--d" in
+  let empty = String.sub_with_range ~first:2 ~len:0 "ab-d" in
   let no_alloc ?sep s =
     let r = String.Sub.(base_string (concat ?sep [s])) in
     eq_bool (r == String.Sub.base_string s || r == String.empty) true
@@ -402,13 +402,13 @@ let is_empty = test "String.Sub.is_empty" @@ fun () ->
   ()
 
 let is_prefix = test "String.Sub.is_prefix" @@ fun () ->
-  let empty = String.sub_with_pos_len ~start:3 ~len:0 "ugoadfj" in
-  let sempty = String.sub_with_pos_len ~start:4 ~len:0 "dfkdjf" in
-  let habla = String.sub_with_pos_len ~start:2 ~len:5 "abhablablu" in
-  let h = String.sub_with_pos_len ~start:0 ~len:1 "hadfdffdf" in
-  let ha = String.sub_with_pos_len ~start:0 ~len:2 "hadfdffdf" in
-  let hab = String.sub_with_pos_len ~start:3 ~len:3 "hadhabdffdf" in
-  let abla = String.sub_with_pos_len ~start:1 ~len:4 "iabla" in
+  let empty = String.sub_with_range ~first:3 ~len:0 "ugoadfj" in
+  let sempty = String.sub_with_range ~first:4 ~len:0 "dfkdjf" in
+  let habla = String.sub_with_range ~first:2 ~len:5 "abhablablu" in
+  let h = String.sub_with_range ~first:0 ~len:1 "hadfdffdf" in
+  let ha = String.sub_with_range ~first:0 ~len:2 "hadfdffdf" in
+  let hab = String.sub_with_range ~first:3 ~len:3 "hadhabdffdf" in
+  let abla = String.sub_with_range ~first:1 ~len:4 "iabla" in
   eqs empty ""; eqs sempty ""; eqs habla "habla"; eqs h "h"; eqs ha "ha";
   eqs hab "hab"; eqs abla "abla";
   eq_bool (String.Sub.is_prefix ~affix:empty sempty) true;
@@ -422,19 +422,19 @@ let is_prefix = test "String.Sub.is_prefix" @@ fun () ->
   ()
 
 let is_infix = test "String.Sub.is_infix" @@ fun () ->
-  let empty = String.sub_with_pos_len ~start:1 ~len:0 "ugoadfj" in
-  let sempty = String.sub_with_pos_len ~start:2 ~len:0 "dfkdjf" in
-  let asdf = String.sub_with_pos_len ~start:1 ~len:4 "aasdflablu" in
-  let a = String.sub_with_pos_len ~start:2 ~len:1 "cda" in
-  let h = String.sub_with_pos_len ~start:0 ~len:1 "h" in
-  let ha = String.sub_with_pos_len ~start:1 ~len:2 "uhadfdffdf" in
-  let ah = String.sub_with_pos_len ~start:0 ~len:2 "ah" in
-  let aha = String.sub_with_pos_len ~start:2 ~len:3 "aaaha" in
-  let haha = String.sub_with_pos_len ~start:1 ~len:4 "ahaha" in
-  let hahb = String.sub_with_pos_len ~start:0 ~len:4 "hahbdfdf" in
-  let blhahb = String.sub_with_pos_len ~start:0 ~len:6 "blhahbdfdf" in
-  let blha = String.sub_with_pos_len ~start:1 ~len:4 "fblhahbdfdf" in
-  let blh = String.sub_with_pos_len ~start:1 ~len:3 "fblhahbdfdf" in
+  let empty = String.sub_with_range ~first:1 ~len:0 "ugoadfj" in
+  let sempty = String.sub_with_range ~first:2 ~len:0 "dfkdjf" in
+  let asdf = String.sub_with_range ~first:1 ~len:4 "aasdflablu" in
+  let a = String.sub_with_range ~first:2 ~len:1 "cda" in
+  let h = String.sub_with_range ~first:0 ~len:1 "h" in
+  let ha = String.sub_with_range ~first:1 ~len:2 "uhadfdffdf" in
+  let ah = String.sub_with_range ~first:0 ~len:2 "ah" in
+  let aha = String.sub_with_range ~first:2 ~len:3 "aaaha" in
+  let haha = String.sub_with_range ~first:1 ~len:4 "ahaha" in
+  let hahb = String.sub_with_range ~first:0 ~len:4 "hahbdfdf" in
+  let blhahb = String.sub_with_range ~first:0 ~len:6 "blhahbdfdf" in
+  let blha = String.sub_with_range ~first:1 ~len:4 "fblhahbdfdf" in
+  let blh = String.sub_with_range ~first:1 ~len:3 "fblhahbdfdf" in
   eqs asdf "asdf"; eqs ha "ha"; eqs h "h"; eqs a "a"; eqs aha "aha";
   eqs haha "haha"; eqs hahb "hahb"; eqs blhahb "blhahb"; eqs blha "blha";
   eqs blh "blh";
@@ -455,16 +455,16 @@ let is_infix = test "String.Sub.is_infix" @@ fun () ->
   ()
 
 let is_suffix = test "String.Sub.is_suffix" @@ fun () ->
-  let empty = String.sub_with_pos_len ~start:1 ~len:0 "ugoadfj" in
-  let sempty = String.sub_with_pos_len ~start:2 ~len:0 "dfkdjf" in
-  let asdf = String.sub_with_pos_len ~start:1 ~len:4 "aasdflablu" in
-  let ha = String.sub_with_pos_len ~start:1 ~len:2 "uhadfdffdf" in
-  let h = String.sub_with_pos_len ~start:0 ~len:1 "h" in
-  let a = String.sub_with_pos_len ~start:2 ~len:1 "cda" in
-  let ah = String.sub_with_pos_len ~start:0 ~len:2 "ah" in
-  let aha = String.sub_with_pos_len ~start:2 ~len:3 "aaaha" in
-  let haha = String.sub_with_pos_len ~start:1 ~len:4 "ahaha" in
-  let hahb = String.sub_with_pos_len ~start:0 ~len:4 "hahbdfdf" in
+  let empty = String.sub_with_range ~first:1 ~len:0 "ugoadfj" in
+  let sempty = String.sub_with_range ~first:2 ~len:0 "dfkdjf" in
+  let asdf = String.sub_with_range ~first:1 ~len:4 "aasdflablu" in
+  let ha = String.sub_with_range ~first:1 ~len:2 "uhadfdffdf" in
+  let h = String.sub_with_range ~first:0 ~len:1 "h" in
+  let a = String.sub_with_range ~first:2 ~len:1 "cda" in
+  let ah = String.sub_with_range ~first:0 ~len:2 "ah" in
+  let aha = String.sub_with_range ~first:2 ~len:3 "aaaha" in
+  let haha = String.sub_with_range ~first:1 ~len:4 "ahaha" in
+  let hahb = String.sub_with_range ~first:0 ~len:4 "hahbdfdf" in
   eqs asdf "asdf"; eqs ha "ha"; eqs h "h"; eqs a "a"; eqs aha "aha";
   eqs haha "haha"; eqs hahb "hahb";
   eq_bool (String.Sub.is_suffix ~affix:empty sempty) true;
@@ -712,82 +712,40 @@ let drop = test "String.Sub.drop" @@ fun () ->
 
 (* Extracting substrings *)
 
-let with_pos_range = test "String.Sub.with_pos_range" @@ fun () ->
-  let invalid ?start ?stop s =
-    app_invalid ~pp:String.Sub.pp (String.Sub.with_pos_range ?start ?stop) s
+let with_range = test "String.Sub.with_range" @@ fun () ->
+  let invalid ?first ?len s =
+    app_invalid ~pp:String.Sub.pp (String.Sub.with_range ?first ?len) s
   in
   let base = "00abc1234" in
   let abc = String.sub ~start:2 ~stop:5 base in
   let a = String.sub ~start:2 ~stop:3 base in
   let empty = String.sub ~start:2 ~stop:2 base in
-  invalid empty ~start:1 ~stop:0;
-  invalid empty ~start:0 ~stop:1;
-  invalid empty ~start:(-1) ~stop:1;
-  invalid empty ~start:0 ~stop:(-1);
-  eqs (String.Sub.with_pos_range a ~start:0 ~stop:0) "";
-  eqs (String.Sub.with_pos_range a ~start:1 ~stop:1) "";
-  invalid a ~start:1 ~stop:2;
-  invalid a ~start:(-1) ~stop:1;
-  eqs (String.Sub.with_pos_range ~start:1 abc) "bc";
-  eqs (String.Sub.with_pos_range ~start:2 abc) "c";
-  eqs (String.Sub.with_pos_range ~start:3 abc) "";
-  invalid ~start:4 abc;
-  eqs (String.Sub.with_pos_range abc ~start:0 ~stop:0) "";
-  eqs (String.Sub.with_pos_range abc ~start:0 ~stop:1) "a";
-  eqs (String.Sub.with_pos_range abc ~start:0 ~stop:2) "ab";
-  invalid abc ~start:0 ~stop:4;
-  eqs (String.Sub.with_pos_range abc ~start:1 ~stop:1) "";
-  eqs (String.Sub.with_pos_range abc ~start:1 ~stop:2) "b";
-  eqs (String.Sub.with_pos_range abc ~start:1 ~stop:3) "bc";
-  invalid abc ~start:1 ~stop:0;
-  invalid abc ~start:1 ~stop:4;
-  eqs (String.Sub.with_pos_range abc ~start:2 ~stop:2) "";
-  eqs (String.Sub.with_pos_range abc ~start:2 ~stop:3) "c";
-  invalid abc ~start:2 ~stop:0;
-  invalid abc ~start:2 ~stop:1;
-  invalid abc ~start:2 ~stop:4;
-  eqs (String.Sub.with_pos_range abc ~start:3 ~stop:3) "";
-  invalid abc ~start:3 ~stop:0;
-  invalid abc ~start:3 ~stop:1;
-  invalid abc ~start:3 ~stop:2;
-  invalid abc ~start:3 ~stop:4;
-  invalid abc ~start:(-1) ~stop:0;
-  ()
-
-let with_pos_len = test "String.Sub.with_pos_len" @@ fun () ->
-  let invalid ?start ?len s =
-    app_invalid ~pp:String.Sub.pp (String.Sub.with_pos_len ?start ?len) s
-  in
-  let base = "00abc1234" in
-  let abc = String.sub ~start:2 ~stop:5 base in
-  let a = String.sub ~start:2 ~stop:3 base in
-  let empty = String.sub ~start:2 ~stop:2 base in
-  invalid empty ~start:1 ~len:0;
-  invalid empty ~start:0 ~len:1;
-  invalid empty ~start:(-1) ~len:1;
-  invalid empty ~start:0 ~len:(-1);
-  eqs (String.Sub.with_pos_len a ~start:0 ~len:0) "";
-  eqs (String.Sub.with_pos_len a ~start:1 ~len:0) "";
-  invalid a ~start:1 ~len:1;
-  invalid a ~start:(-1) ~len:1;
-  eqs (String.Sub.with_pos_len ~start:1 abc) "bc";
-  eqs (String.Sub.with_pos_len ~start:2 abc) "c";
-  eqs (String.Sub.with_pos_len ~start:3 abc) "";
-  invalid ~start:4 abc;
-  eqs (String.Sub.with_pos_len abc ~start:0 ~len:0) "";
-  eqs (String.Sub.with_pos_len abc ~start:0 ~len:1) "a";
-  eqs (String.Sub.with_pos_len abc ~start:0 ~len:2) "ab";
-  invalid abc ~start:0 ~len:4;
-  eqs (String.Sub.with_pos_len abc ~start:1 ~len:0) "";
-  eqs (String.Sub.with_pos_len abc ~start:1 ~len:1) "b";
-  eqs (String.Sub.with_pos_len abc ~start:1 ~len:2) "bc";
-  invalid abc ~start:1 ~len:3;
-  eqs (String.Sub.with_pos_len abc ~start:2 ~len:0) "";
-  eqs (String.Sub.with_pos_len abc ~start:2 ~len:1) "c";
-  invalid abc ~start:2 ~len:2;
-  eqs (String.Sub.with_pos_len abc ~start:3 ~len:0) "";
-  invalid abc ~start:1 ~len:4;
-  invalid abc ~start:(-1) ~len:1;
+  invalid empty ~first:1 ~len:0;
+  invalid empty ~first:0 ~len:1;
+  invalid empty ~first:(-1) ~len:1;
+  invalid empty ~first:0 ~len:(-1);
+  eqs (String.Sub.with_range a ~first:0 ~len:0) "";
+  eqs (String.Sub.with_range a ~first:1 ~len:0) "";
+  invalid a ~first:1 ~len:1;
+  invalid a ~first:(-1) ~len:1;
+  eqs (String.Sub.with_range ~first:1 abc) "bc";
+  eqs (String.Sub.with_range ~first:2 abc) "c";
+  eqs (String.Sub.with_range ~first:3 abc) "";
+  invalid ~first:4 abc;
+  eqs (String.Sub.with_range abc ~first:0 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:0 ~len:1) "a";
+  eqs (String.Sub.with_range abc ~first:0 ~len:2) "ab";
+  invalid abc ~first:0 ~len:4;
+  eqs (String.Sub.with_range abc ~first:1 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:1 ~len:1) "b";
+  eqs (String.Sub.with_range abc ~first:1 ~len:2) "bc";
+  invalid abc ~first:1 ~len:3;
+  eqs (String.Sub.with_range abc ~first:2 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:2 ~len:1) "c";
+  invalid abc ~first:2 ~len:2;
+  eqs (String.Sub.with_range abc ~first:3 ~len:0) "";
+  invalid abc ~first:1 ~len:4;
+  invalid abc ~first:(-1) ~len:1;
   ()
 
 let with_index_range = test "String.Sub.with_index_range" @@ fun () ->
@@ -1228,8 +1186,7 @@ let suite = suite "Base String functions"
       span;
       min_span;
       drop;
-      with_pos_range;
-      with_pos_len;
+      with_range;
       with_index_range;
       slice;
       trim;

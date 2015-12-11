@@ -12,56 +12,12 @@ let strf = Format.asprintf
 
 (* Errors *)
 
-let err_empty_string =
-  "the string is empty"
-
-let err_empty_sep =
-  "~sep is an empty string"
-
-let err_pos_range start stop len =
-  strf "invalid start:%d stop:%d for position range [0;%d]" start stop len
-
-let err_pos_len start len s_len =
-  strf "invalid start:%d len:%d for position range [0;%d]" start len s_len
-
-let err_index_range first last len =
-  strf "invalid first:%d last:%d for position range [0;%d]" first last len
-
-let err_neg_max max =
-  strf "negative ~max (%d)" max
-
-let err_neg_min max =
-  strf "negative ~min (%d)" max
-
-let err_neg_len len =
-  strf "negative length (%d)" len
-
-let err_min_max min max =
-  strf "~min (%d) > ~max (%d)" min max
-
-(* Making substrings *)
-
-let with_pos_range make_sub ?(start = 0) ?stop s =
-  let s_len = string_length s in
-  let stop = match stop with None -> s_len | Some stop -> stop in
-  if start < 0 || stop > s_len || stop < start
-  then invalid_arg (err_pos_range start stop s_len)
-  else make_sub s ~start ~stop
-
-let with_pos_len make_sub ?(start = 0) ?len s =
-  let s_len = string_length s in
-  let len = match len with None -> s_len - start | Some l -> l in
-  let stop = start + len in
-  if start < 0 || stop > s_len || stop < start
-  then invalid_arg (err_pos_len start len s_len)
-  else make_sub s ~start ~stop
-
-let with_index_range make_sub ?(first = 0) ?last s =
-  let s_len = string_length s in
-  let last = match last with None -> s_len - 1 | Some l -> l in
-  if first < 0 || last > s_len - 1 || last < first
-  then invalid_arg (err_index_range first last s_len)
-  else make_sub s ~start:first ~stop:(last + 1)
+let err_empty_string = "the string is empty"
+let err_empty_sep = "~sep is an empty string"
+let err_neg_max max = strf "negative ~max (%d)" max
+let err_neg_min max = strf "negative ~min (%d)" max
+let err_neg_len len = strf "negative length (%d)" len
+let err_min_max min max = strf "~min (%d) > ~max (%d)" min max
 
 (* Base *)
 
