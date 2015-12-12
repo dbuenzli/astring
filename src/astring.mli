@@ -914,6 +914,12 @@ v}
   (** [iteri f s] is [f 0 s.[0]; f 1 s.[1];] ...
       [f m s.[m]] with [m = String.length s - 1]. *)
 
+  (** {1:unique Uniqueness} *)
+
+  val uniquify : string list -> string list
+  (** [uniquify ss] is [ss] without duplicates, the list order is
+      preserved. *)
+
   (** {1:ascii Strings as US-ASCII character sequences} *)
 
   (** US-ASCII string support.
@@ -1130,24 +1136,6 @@ v}
     (** [dump_string_map ppf m] prints an unspecified representation of the
         string map [m] on [ppf]. *)
   end
-
-  (** {1:unique Uniqueness} *)
-
-  val uniquify : string list -> string list
-  (** [uniquify ss] is [ss] without duplicates, the list order is
-      preserved. *)
-
-  val make_unique_in : set ->
-    ?suff:(int -> string, Format.formatter, unit, string) format4 ->
-    string -> string
-  (** [make_unique_in set ~suff elt] is a string that does not belong
-      to [set].  If [elt] is not in [set] then this is [elt] itself
-      otherwise it is a string defined by {!strf}[ ("%s" ^^ suff) elt
-      d] where [d] is a positive number starting from [1]. [suff]
-      defaults to ["~%d"].
-
-      @raise Invalid_argument if all positive numbers were exhausted (unlikely
-      on a 64-bit platorm). *)
 
   (** {1:convert OCaml base type conversions} *)
 

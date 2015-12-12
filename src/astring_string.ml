@@ -692,18 +692,6 @@ let uniquify ss =
   in
   List.rev (snd (List.fold_left add (Set.empty, []) ss))
 
-let default_suff = format_of_string "~%d"
-let err_can't_unique elt = strf "could not make %s unique in set" elt
-let make_unique_in set ?(suff = default_suff) elt =
-  if not (Set.mem elt set) then elt else
-  let rec loop i =
-    if i < 0 (* overflow *) then invalid_arg (err_can't_unique elt) else
-    let candidate = (strf ("%s" ^^ suff) elt i) in
-    if not (Set.mem candidate set) then candidate else
-    loop (i + 1)
-  in
-  loop 1
-
 (* OCaml base type conversions *)
 
 let of_char = Astring_base.of_char

@@ -1202,19 +1202,6 @@ let uniquify = test "String.uniquify" @@ fun () ->
   eq (String.uniquify ["a";"b";"c";"b"]) ["a";"b";"c"];
   ()
 
-let make_unique_in = test "String.make_unique_in" @@ fun () ->
-  let set = String.Set.(add "a" @@ add "b" @@ add "c" @@ empty) in
-  let set' = String.Set.(add "a~1" @@ set) in
-  let no_alloc ?suff set s =
-    eq_bool ((String.make_unique_in ?suff set s) == s) true
-  in
-  no_alloc set "d";
-  no_alloc set ~suff:"bla%d" "d";
-  eq_str (String.make_unique_in set "a") "a~1";
-  eq_str (String.make_unique_in set ~suff:"-%d" "a") "a-1";
-  eq_str (String.make_unique_in set' "a") "a~2";
-  ()
-
 let suite = suite "String functions"
     [ misc;
       head;
@@ -1246,8 +1233,7 @@ let suite = suite "String functions"
       ascii_casing;
       ascii_escapes;
       ascii_unescapes;
-      uniquify;
-      make_unique_in; ]
+      uniquify; ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.
