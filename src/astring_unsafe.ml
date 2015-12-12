@@ -20,6 +20,7 @@ let bytes_unsafe_blit_string s si d di len =
 
 external string_length : string -> int = "%string_length"
 external string_equal : string -> string -> bool = "caml_string_equal"
+external string_compare : string -> string -> int = "caml_string_compare"
 external string_safe_get : string -> int -> char = "%string_safe_get"
 external string_unsafe_get : string -> int -> char = "%string_unsafe_get"
 

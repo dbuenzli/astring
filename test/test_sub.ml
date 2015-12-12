@@ -622,6 +622,7 @@ let span = test "String.Sub.span" @@ fun () ->
   eq (String.Sub.span ~sat:Char.Ascii.is_white empty) (empty, empty);
   ()
 
+(*
 let min_span = test "String.Sub.min_span" @@ fun () ->
   let base = "0ab cd0" in
   let eq = eq_option ~eq:eq_pair ~pp:pp_pair in
@@ -658,6 +659,7 @@ let min_span = test "String.Sub.min_span" @@ fun () ->
   eq (String.Sub.min_span ~min:0 ~max:0 empty) (Some (empty, empty));
   eq (String.Sub.min_span ~min:1 ~max:1 empty) None;
   ()
+*)
 
 let drop = test "String.Sub.drop" @@ fun () ->
   eqs (String.Sub.drop ~sat:(Char.equal 'a') (String.sub "aabbaa")) "bbaa";
@@ -1139,7 +1141,6 @@ let suite = suite "Base String functions"
       equal;
       compare;
       span;
-      min_span;
       drop;
       with_range;
       with_index_range;

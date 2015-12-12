@@ -179,7 +179,7 @@ end
 (** Strings, {{!Sub}substrings}, string {{!Set}sets} and {{!Map}maps}.
 
     A string [s] of length [l] is a zero-based indexed sequence of [l]
-    bytes. An index [i] is {e valid} in [s] if it is in the range
+    bytes. An index [i] of [s] is an integer in the range
     \[[0];[l-1]\], it represents the [i]th byte of [s] which can be
     accessed using the string indexing operator [s.[i]].
 
@@ -215,7 +215,7 @@ module String : sig
   (** [get s i] is the byte of [s]' at index [i]. This is
       equivalent to the [s.[i]] notation.
 
-      @raise Invalid_argument if [i] is not a {{!idxpos}valid index} in [s]. *)
+      @raise Invalid_argument if [i] is not an index of [s]. *)
 
   val get_byte : string -> int -> int
   (** [get_byte s i] is [Char.to_int (get s i)] *)
@@ -315,42 +315,38 @@ module String : sig
   (** [trim ~drop s] is [s] with prefix and suffix bytes satisfying
       [drop] in [s] removed. [drop] defaults to {!Char.Ascii.is_white}. *)
 
-  val span : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> string ->
-    (string * string)
-  (** [span ~rev ~max ~sat s] is [(l, r)] where:
+  val span : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
+    string -> (string * string)
+  (** [span ~rev ~min ~max ~sat s] is [(l, r)] where:
         {ul
-        {- if [rev] is [false] (default), [l] is at most [max]
-           consecutive [sat] satisfying initial bytes of [s] and [r]
-           the remaining bytes.}
-        {- if [rev] is [true], [r] is at most [max] consecutive [sat]
-           satisfying final bytes of [s] and [l] the remaining
-           bytes.}}
-        If [max] is unspecified the span is limited by the extents of
-        the string [s]. [sat] defaults to [fun _ -> true].
-
-        The invariant [l ^ r = s] holds.
-
-        @raise Invalid_argument if [max] is negative. *)
-
-  val min_span : ?rev:bool -> min:int -> ?max:int -> ?sat:(char -> bool) ->
-    string -> (string * string) option
-  (** [min_span ~rev ~min ~max ~sat s] is [Some (l, r)] where:
-        {ul
-        {- if [rev] is [false] (default), [l] is at least [min] and at
-           most [max] consecutive [sat] satisfying initial bytes of [s]
-           and [r] the remaining bytes.}
+        {- if [rev] is [false] (default), [l] is at least [min]
+           and at most [max] consecutive [sat] satisfying initial bytes of
+           [s] or {!empty} if there are no such bytes. [r] are the remaining
+           bytes of [s].}
         {- if [rev] is [true], [r] is at least [min] and at most [max]
-           consecutive [sat] satisfying final bytes of [s] and [l] the
-           remaining bytes.}}
-        If [max] is unspecified the span is unlimited. [None] is returned if
-        no [min] bytes satisfied [sat], note that if [min] is [0] [None] is
-        never returned and we get the behaviour of {!span}. [sat] defaults to
-        [fun _ -> true].
+           consecutive [sat] satisfying final bytes of [s] or {!empty}
+           if there are no such bytes. [l] are the remaining
+           the bytes of [s].}}
+      If [max] is unspecified the span is unlimited. If [min]
+      is unspecified it defaults to [0]. If [min > max] the condition
+      can't be satisfied and the left or right span, depending on [rev], is
+      always empty. [sat] defaults to [(fun _ -> true)].
 
-        The invariant [l ^ r = s] holds.
+      The invariant [l ^ r = s] holds.
 
-        @raise Invalid_argument if [min] or [max] are negative or if
-        [min] > [max]. *)
+      @raise Invalid_argument if [max] or [min] is negative.  *)
+
+  val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
+    string -> string
+  (** [take ~rev ~min ~max ~sat s] is the matching span of {!span} without
+      the remaining one. In other words:
+      {[(if rev then snd else fst) @@ span ~rev ~min ~max ~sat s]} *)
+
+  val drop : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
+    string -> string
+  (** [drop ~rev ~min ~max ~sat s] is the remaining span of {!span} without
+      the matching span. In other words:
+      {[(if rev then fst else snd) @@ span ~rev ~min ~max ~sat s]} *)
 
   val cut : ?rev:bool -> sep:string -> string -> (string * string) option
   (** [cut ~sep s] is either the pair [Some (l,r)] of the two
@@ -384,8 +380,8 @@ module String : sig
       @raise Invalid_argument if [sep] is the empty string. *)
 
   val fields : ?empty:bool -> ?is_sep:(char -> bool) -> string -> string list
-  (** [fields ~empty ~is_sep s] is the list of substrings made of
-      bytes that are not separated by bytes for which [is_sep] is
+  (** [fields ~empty ~is_sep s] is the list of (possibly empty) substrings
+      made of bytes that are not separated by a byte for which [is_sep] is
       [true].  Empty substrings are omitted in the list if [empty] is
       [false] (defaults to [true]). [is_sep] defaults to
       {!Char.Ascii.is_white}. *)
@@ -460,8 +456,7 @@ module String : sig
     val get : sub -> int -> char
     (** [get s i] is the byte of [s] at its zero-based index [i].
 
-        @raise Invalid_argument if [i] is not a {{!idxpos}valid index}
-        in [s]. *)
+        @raise Invalid_argument if [i] is not an index of [s]. *)
 
     val get_byte : sub -> int -> int
     (** [get_byte s i] is [Char.to_int (get s i)]. *)
@@ -626,49 +621,18 @@ module String : sig
     (** [trim] is like {!String.trim}. If all bytes are dropped returns
         an empty string located in the middle of the argument. *)
 
-    val span : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> sub ->
-      (sub * sub)
-    (** [span ~rev ~max ~sat s] is [(l, r)] where:
-        {ul
-        {- if [rev] is [false] (default), [l] is at most [max] consecutive
-           [sat] satisfying bytes of [s] located after [start s] and
-           [r] the remaining bytes.}
-        {- if [rev] is [true], [r] is at most [max] consecutive [sat]
-           satisfying bytes of [s] located before [stop s] and [l] the
-           remaining bytes.}}
-        If [max] is unspecified the span is limited by the extents of
-        the substring [s]. [sat] defaults to [fun _ -> true].
+    val span : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
+      sub -> (sub * sub)
+    (** [span] is like {!String.span}. For a string [s] a left
+        empty span is [start s] and a right empty span is [stop s]. *)
 
-        The invariant [equal_bytes (append l r) s] holds.
+    val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
+      sub -> sub
+    (** [take] is like {!String.take}. *)
 
-        @raise Invalid_argument if [max] is negative. *)
-
-    val min_span : ?rev:bool -> min:int -> ?max:int -> ?sat:(char -> bool) ->
-      sub -> (sub * sub) option
-    (** [min_span ~rev ~min ~max ~sat s] is [Some (l, r)] where:
-        {ul
-        {- if [rev] is [false] (default), [l] is at least [min] and at
-           most [max] consecutive [sat] satisfying bytes of [s]
-           located after [start s] and [r] the remaining bytes.}
-        {- if [rev] is [true], [r] is at least [min] and at most [max]
-           consecutive [sat] satisfying bytes of [s] located before [stop s]
-           and [l] the remaining bytes.}}
-        If [max] is unspecified the span is limited by the extents of
-        the substring [s]. [None] is returned if no [min] bytes
-        satisfied [sat], note that if [min] is [0] [None] is never
-        returned and we get the behaviour of {!span}. [sat] defaults to
-        [fun _ -> true].
-
-        The invariant [equal_bytes (append l r) s] holds.
-
-        @raise Invalid_argument if [min] or [max] are negative or if
-        [min] > [max]. *)
-
-    val drop : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> sub -> sub
-    (**
-       {ul
-       {- [drop ~rev:false ~max ~sat s] is [snd (span ~rev:false ~max ~sat s)]}
-       {- [drop ~rev:true ~max ~sat s] is [fst (span ~rev:true ~max ~sat s)]}}*)
+    val drop : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
+      sub -> sub
+    (** [drop] is like {!String.drop}. *)
 
     val cut : ?rev:bool -> sep:sub -> sub -> (sub * sub) option
     (** [cut] is like {!String.cut}. [sep] can be on a different base. *)
@@ -831,10 +795,10 @@ module String : sig
                             |---------------|  extent d c
                             |                  overlap d c
 v}
-  *)
 
 
-    (** {1:idxpos String indices and positions}
+
+        {1:idxpos String indices and positions}
 
 {v
 positions  0   1   2   3   4    l-1    l
@@ -1312,9 +1276,9 @@ fun s -> try
   | Some _ | None -> raise Exit
   in
   let parse_int s =
-    match String.Sub.min_span ~min:1 ~sat:Char.Ascii.is_digit s with
-    | None -> raise Exit
-    | Some (i, s) ->
+    match String.Sub.span ~min:1 ~sat:Char.Ascii.is_digit s with
+    | (i, _) when String.Sub.is_empty i -> raise Exit
+    | (i, s) ->
         match String.Sub.to_int i with
         | None -> raise Exit | Some i -> i, s
   in
@@ -1349,9 +1313,9 @@ fun s -> try
   let skip_white s = String.Sub.drop ~sat:Char.Ascii.is_white s in
   let parse_key s =
     let id_char c = Char.Ascii.is_letter c || c = '_' in
-    match String.Sub.min_span ~min:1 ~sat:id_char s with
-    | None -> raise Exit
-    | Some (key, rem) -> (String.Sub.to_string key), rem
+    match String.Sub.span ~min:1 ~sat:id_char s with
+    | (key, _) when String.Sub.is_empty key -> raise Exit
+    | (key, rem) -> (String.Sub.to_string key), rem
   in
   let parse_eq s = match String.Sub.head s with
   | Some '=' -> String.Sub.tail s

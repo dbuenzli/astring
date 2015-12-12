@@ -455,84 +455,62 @@ let trim = test "String.trim" @@ fun () ->
   eq_str (String.trim "     ") "";
   ()
 
-let span = test "String.span" @@ fun () ->
+let span = test "String.{span,take,drop}" @@ fun () ->
   let eq_pair (l0, r0) (l1, r1) = String.equal l0 l1 && String.equal r0 r1 in
-  let no_alloc_left_empty f s =
-    let (l, r) = f s in eq_bool (l == String.empty && r == s) true
+  let eq_pair = eq ~eq:eq_pair ~pp:pp_pair in
+  let eq ?(rev = false) ?min ?max ?sat s (sl, sr as spec) =
+    let (l, r as pair) = String.span ~rev ?min ?max ?sat s in
+    let t = String.take ~rev ?min ?max ?sat s in
+    let d = String.drop ~rev ?min ?max ?sat s in
+    eq_pair pair spec;
+    eq_str t (if rev then sr else sl);
+    eq_str d (if rev then sl else sr);
+    if sl = "" then begin
+      eq_bool (l == String.empty) true;
+      eq_bool (r == s) true;
+      eq_bool ((if rev then d else t) == String.empty) true;
+    end;
+    if sr = "" then begin
+      eq_bool (r == String.empty) true;
+      eq_bool (l == s) true;
+      eq_bool ((if rev then t else d) == String.empty) true;
+    end
   in
-  let no_alloc_right_empty f s =
-    let (l, r) = f s in eq_bool (l == s && r == String.empty) true
+  let invalid ?rev ?min ?max ?sat s =
+    app_invalid ~pp:pp_pair (String.span ?rev ?min ?max ?sat) s
   in
-  let eq = eq ~eq:eq_pair ~pp:pp_pair in
-  no_alloc_left_empty (String.span ~sat:Char.Ascii.is_white) "ab_cd";
-  eq (String.span ~sat:Char.Ascii.is_letter "ab_cd") ("ab", "_cd");
-  eq (String.span ~max:1 ~sat:Char.Ascii.is_letter "ab_cd") ("a", "b_cd");
-  no_alloc_left_empty (String.span ~max:0 ~sat:Char.Ascii.is_letter) "ab_cd";
-  no_alloc_right_empty (String.span ~rev:true ~sat:Char.Ascii.is_white) "ab_cd";
-  eq (String.span ~rev:true ~sat:Char.Ascii.is_letter "ab_cd") ("ab_", "cd");
-  eq (String.span ~rev:true ~max:1 ~sat:Char.Ascii.is_letter "ab_cd")
-    ("ab_c", "d");
-  no_alloc_right_empty (String.span ~rev:true ~max:0 ~sat:Char.Ascii.is_letter)
-                          "ab_cd";
-  no_alloc_right_empty (String.span ~sat:Char.Ascii.is_letter) "ab";
-  no_alloc_right_empty (String.span ~max:30 ~sat:Char.Ascii.is_letter) "ab";
-  no_alloc_left_empty (String.span ~rev:true ~sat:Char.Ascii.is_letter) "ab";
-  no_alloc_left_empty (String.span ~rev:true ~max:30 ~sat:Char.Ascii.is_letter)
-    "ab";
-  eq (String.span ~max:1 ~sat:Char.Ascii.is_letter "ab") ("a", "b");
-  eq (String.span ~rev:true ~max:1 ~sat:Char.Ascii.is_letter "ab")
-    ("a", "b");
-  no_alloc_left_empty (String.span ~max:1 ~sat:Char.Ascii.is_white) "ab";
-  no_alloc_right_empty (String.span ~rev:true ~max:1 ~sat:Char.Ascii.is_white )
-                         "ab";
-  no_alloc_left_empty (String.span ~sat:Char.Ascii.is_white) String.empty;
-  no_alloc_right_empty (String.span ~sat:Char.Ascii.is_white) String.empty;
-  no_alloc_left_empty (String.span ~rev:true ~sat:Char.Ascii.is_white)
-    String.empty;
-  no_alloc_right_empty (String.span ~rev:true ~sat:Char.Ascii.is_white)
-    String.empty;
-  ()
-
-let min_span = test "String.min_span" @@ fun () ->
-  let eq_pair (l0, r0) (l1, r1) = String.equal l0 l1 && String.equal r0 r1 in
-  let no_alloc_left_empty f s = match f s with
-  | None -> eq_bool false true
-  | Some (l, r) -> eq_bool (l == String.empty && r == s) true
-  in
-  let no_alloc_right_empty f s = match f s with
-  | None -> eq_bool false true
-  | Some (l, r) -> eq_bool (l == s && r == String.empty) true
-  in
-  let eq = eq_option ~eq:eq_pair ~pp:pp_pair in
-  let invalid = app_invalid ~pp:(pp_option pp_pair) in
-  invalid (fun s -> String.min_span ~min:2 ~max:1 s) "ab_cd";
-  invalid (fun s -> String.min_span ~min:(-2) ~max:1 s) "ab_cd";
-  invalid (fun s -> String.min_span ~min:0 ~max:(-1) s) "ab_cd";
-  eq (String.min_span ~min:1 ~sat:Char.Ascii.is_white "ab_cd")
-    None;
-  eq (String.min_span ~min:2 ~sat:Char.Ascii.is_letter "ab_cd")
-    (Some ("ab", "_cd"));
-  eq (String.min_span ~min:1 ~max:1 ~sat:Char.Ascii.is_letter "ab_cd")
-    (Some ("a", "b_cd"));
-  eq (String.min_span ~min:3 ~sat:Char.Ascii.is_letter "ab_cd")
-    None;
-  eq (String.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_white "ab_cd")
-    None;
-  no_alloc_right_empty
-    (String.min_span ~min:1 ~sat:Char.Ascii.is_letter) "abcd";
-  eq (String.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_letter "abcd")
-    (Some ("", "abcd"));
-  no_alloc_left_empty
-    (String.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_letter) "abcd";
-  eq (String.min_span ~rev:true ~min:2 ~sat:Char.Ascii.is_letter "ab_cd")
-    (Some ("ab_", "cd"));
-  eq (String.min_span ~rev:true ~min:1 ~max:1 ~sat:Char.Ascii.is_letter
-        "ab_cd") (Some ("ab_c", "d"));
-  eq (String.min_span ~rev:true ~min:3 ~sat:Char.Ascii.is_letter "ab_cd")
-    None;
-  eq (String.min_span ~min:0 ~max:0 String.empty) (Some (String.empty,
-                                                         String.empty));
-  eq (String.min_span ~min:1 ~max:1 String.empty) None;
+  invalid ~rev:false ~min:(-1) "";
+  invalid ~rev:true  ~min:(-1) "";
+  invalid ~rev:false ~max:(-1) "";
+  invalid ~rev:true ~max:(-1) "";
+  eq ~rev:false String.empty ("","");
+  eq ~rev:true  String.empty ("","");
+  eq ~rev:false ~min:0 ~max:0 String.empty ("","");
+  eq ~rev:true  ~min:0 ~max:0 String.empty ("","");
+  eq ~rev:false ~min:1 ~max:0 String.empty ("","");
+  eq ~rev:true  ~min:1 ~max:0 String.empty ("","");
+  eq ~rev:false ~max:0 "ab_cd" ("","ab_cd");
+  eq ~rev:true  ~max:0 "ab_cd" ("ab_cd","");
+  eq ~rev:false ~max:2 "ab_cd" ("ab", "_cd");
+  eq ~rev:true  ~max:2 "ab_cd" ("ab_", "cd");
+  eq ~rev:false ~min:6 "ab_cd" ("", "ab_cd");
+  eq ~rev:true  ~min:6 "ab_cd" ("ab_cd", "");
+  eq ~rev:false "ab_cd" ("ab_cd", "");
+  eq ~rev:true  "ab_cd" ("", "ab_cd");
+  eq ~rev:false ~max:30 "ab_cd" ("ab_cd", "");
+  eq ~rev:true  ~max:30 "ab_cd" ("", "ab_cd");
+  eq ~rev:false ~sat:Char.Ascii.is_white "ab_cd" ("","ab_cd");
+  eq ~rev:true  ~sat:Char.Ascii.is_white "ab_cd" ("ab_cd","");
+  eq ~rev:false ~sat:Char.Ascii.is_letter "ab_cd" ("ab", "_cd");
+  eq ~rev:true  ~sat:Char.Ascii.is_letter "ab_cd" ("ab_", "cd");
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~max:0 "ab_cd" ("", "ab_cd");
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~max:0 "ab_cd" ("ab_cd", "");
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~max:1 "ab_cd" ("a", "b_cd");
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~max:1 "ab_cd" ("ab_c", "d");
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~min:2 ~max:1 "ab_cd" ("", "ab_cd");
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~min:2 ~max:1 "ab_cd" ("ab_cd", "");
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~min:3 "ab_cd" ("", "ab_cd");
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~min:3 "ab_cd" ("ab_cd", "");
   ()
 
 let cut = test "String.cut" @@ fun () ->
@@ -794,8 +772,6 @@ let fields = test "String.fields" @@ fun () ->
   ()
 
 (* Traversing strings *)
-
-(* Finding and filtering bytes *)
 
 let find = test "String.find" @@ fun () ->
   let eq = eq_option ~eq:(=) ~pp:pp_int in
@@ -1219,7 +1195,6 @@ let suite = suite "String functions"
       with_index_range;
       trim;
       span;
-      min_span;
       cut;
       cuts;
       fields;

@@ -25,39 +25,35 @@ let empty = ""
 
 (* Predicates *)
 
-let for_all sat s ~start ~stop =
-  let max_idx = stop - 1 in
+let for_all sat s ~first ~last =
   let rec loop i =
-    if i > max_idx then true else
+    if i > last then true else
     if sat (string_unsafe_get s i) then loop (i + 1) else false
   in
-  loop start
+  loop first
 
-let exists sat s ~start ~stop =
-  let max_idx = stop - 1 in
+let exists sat s ~first ~last =
   let rec loop i =
-    if i > max_idx then false else
+    if i > last then false else
     if sat (string_unsafe_get s i) then true else loop (i + 1)
   in
-  loop start
+  loop first
 
 (* Traversing *)
 
-let fold_left f acc s ~start ~stop =
-  let max_idx = stop - 1 in
+let fold_left f acc s ~first ~last =
   let rec loop acc i =
-    if i > max_idx then acc else
+    if i > last then acc else
     loop (f acc (string_unsafe_get s i)) (i + 1)
   in
-  loop acc start
+  loop acc first
 
-let fold_right f s acc ~start ~stop =
-  let max_idx = stop - 1 in
+let fold_right f s acc ~first ~last =
   let rec loop i acc =
-    if i < start then acc else
+    if i < first then acc else
     loop (i - 1) (f (string_unsafe_get s i) acc)
   in
-  loop max_idx acc
+  loop last acc
 
 (* OCaml conversions *)
 

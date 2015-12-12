@@ -269,8 +269,11 @@ let is_suffix ~affix:(affix, _, astop as affix_sub) (s, _, sstop as s_sub) =
   in
   loop 0
 
-let for_all sat (s, start, stop) = Astring_base.for_all sat s ~start ~stop
-let exists sat (s, start, stop) = Astring_base.exists sat s ~start ~stop
+let for_all sat (s, start, stop) =
+  Astring_base.for_all sat s ~first:start ~last:(stop - 1)
+
+let exists sat (s, start, stop) =
+  Astring_base.exists sat s ~first:start ~last:(stop - 1)
 
 let equal_base (s0, _, _) (s1, _, _) = s0 == s1
 
@@ -352,7 +355,9 @@ let trim ?(drop = Astring_char.Ascii.is_white) (s, start, stop as sub) =
   if left = start && right = max_pos then sub else
   (s, left, right)
 
-let span ?(rev = false) ?max ?(sat = fun _ -> true) (s, start, stop as sub) =
+let span ?(rev = false) ?min ?max ?(sat = fun _ -> true)
+    (s, start, stop as sub)
+  =
   let max_idx = stop - 1 in
   if rev then begin
     let min_idx = match max with
@@ -413,8 +418,11 @@ let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
     loop start
   end
 
-let drop ?(rev = false) ?max ?sat s =
-  if rev then fst (span ~rev ?max ?sat s) else snd (span ~rev ?max ?sat s)
+let take ?(rev = false) ?min ?max ?sat s =
+  (if rev then snd else fst) @@ span ~rev ~min ?max ?sat s
+
+let drop ?(rev = false) ?min ?max ?sat s =
+  (if rev then fst else snd) @@ span ~rev ~min ?max ?sat s
 
 let fcut ~sep:(sep, sep_start, sep_stop) (s, start, stop) =
   let sep_len = sep_stop - sep_start in
@@ -595,10 +603,10 @@ let mapi f (s, start, stop) =
   (bytes_unsafe_to_string b, 0, len)
 
 let fold_left f acc (s, start, stop) =
-  Astring_base.fold_left f acc s ~start ~stop
+  Astring_base.fold_left f acc s ~first:start ~last:(stop - 1)
 
 let fold_right f (s, start, stop) acc =
-  Astring_base.fold_right f s acc ~start ~stop
+  Astring_base.fold_right f s acc ~first:start ~last:(stop - 1)
 
 let iter f (s, start, stop) =
   for i = start to stop - 1 do f (sunsafe_get s i) done

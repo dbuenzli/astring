@@ -16,9 +16,9 @@ fun s -> try
   | Some _ | None -> raise Exit
   in
   let parse_int s =
-    match String.Sub.min_span ~min:1 ~sat:Char.Ascii.is_digit s with
-    | None -> raise Exit
-    | Some (i, s) ->
+    match String.Sub.span ~min:1 ~sat:Char.Ascii.is_digit s with
+    | (i, _) when String.Sub.is_empty i -> raise Exit
+    | (i, s) ->
         match String.Sub.to_int i with
         | None -> raise Exit | Some i -> i, s
   in
@@ -43,9 +43,9 @@ fun s -> try
   let skip_white s = String.Sub.drop ~sat:Char.Ascii.is_white s in
   let parse_key s =
     let id_char c = Char.Ascii.is_letter c || c = '_' in
-    match String.Sub.min_span ~min:1 ~sat:id_char s with
-    | None -> raise Exit
-    | Some (key, rem) -> (String.Sub.to_string key), rem
+    match String.Sub.span ~min:1 ~sat:id_char s with
+    | (key, _) when String.Sub.is_empty key -> raise Exit
+    | (key, rem) -> (String.Sub.to_string key), rem
   in
   let parse_eq s = match String.Sub.head s with
   | Some '=' -> String.Sub.tail s
