@@ -83,5 +83,5 @@ fun s -> try
     let value, s = s |> skip_white |> parse_eq |> skip_white |> parse_value in
     parse_bindings (String.Map.add key value acc) (skip_white s)
   in
-  Some (parse_bindings String.Map.empty (skip_white @@ String.sub s))
+  Some (String.sub s |> skip_white |> parse_bindings String.Map.empty)
 with Exit -> None

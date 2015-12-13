@@ -19,59 +19,54 @@ let err_empty_sub pos = strf "empty substring [%d;%d]" pos pos
 let err_pos_range start stop len =
   strf "invalid start:%d stop:%d for position range [0;%d]" start stop len
 
-let err_pos_len start len s_len =
-  strf "invalid start:%d len:%d for position range [0;%d]" start len s_len
-
-let err_index_range first last len =
-  strf "invalid first:%d last:%d for position range [0;%d]" first last len
-
-let with_pos_range make_sub ?(start = 0) ?stop s =
+let v ?(start = 0) ?stop s =
   let s_len = string_length s in
   let stop = match stop with None -> s_len | Some stop -> stop in
   if start < 0 || stop > s_len || stop < start
   then invalid_arg (err_pos_range start stop s_len)
-  else make_sub s ~start ~stop
+  else (s, start, stop)
 
-let with_pos_len make_sub ?(start = 0) ?len s =
+let of_string_with_range ?(first = 0) ?(len = max_int) s =
+  if len < 0 then invalid_arg (Astring_base.err_neg_len len) else
   let s_len = string_length s in
-  let len = match len with None -> s_len - start | Some l -> l in
-  let stop = start + len in
-  if start < 0 || stop > s_len || stop < start
-  then invalid_arg (err_pos_len start len s_len)
-  else make_sub s ~start ~stop
+  let max_idx = s_len - 1 in
+  let empty = function
+  | first when first < 0 -> (s, 0, 0)
+  | first when first > max_idx -> (s, s_len, s_len)
+  | first -> (s, first, first)
+  in
+  if len = 0 then empty first else
+  let last (* index *) = match len with
+  | len when len = max_int -> max_idx
+  | len ->
+      let last = first + len - 1 in
+      if last > max_idx then max_idx else last
+  in
+  let first = if first < 0 then 0 else first in
+  if first > max_idx || last < 0 || first > last then empty first else
+  (s, first, last + 1 (* position *))
 
-let with_index_range make_sub ?(first = 0) ?last s =
+let of_string_with_index_range ?(first = 0) ? last s =
   let s_len = string_length s in
-  let last = match last with None -> s_len - 1 | Some l -> l in
-  if first < 0 || last > s_len - 1 || last < first
-  then invalid_arg (err_index_range first last s_len)
-  else make_sub s ~start:first ~stop:(last + 1)
-
-let make_sub s ~start ~stop = (s, start, stop)
-
-let of_string_with_pos_range ?start ?stop s =
-  with_pos_range make_sub ?start ?stop s
-
-let of_string_with_range ?first ?len s =
-  with_pos_len make_sub ?start:first ?len s
-
-let of_string_with_index_range ?first ?last s =
-  with_index_range make_sub ?first ?last s
-
-let with_pos_len make_sub ?(start = 0) ?len s =
-  let s_len = string_length s in
-  let len = match len with None -> s_len - start | Some l -> l in
-  let stop = start + len in
-  if start < 0 || stop > s_len || stop < start
-  then invalid_arg (err_pos_len start len s_len)
-  else make_sub s ~start ~stop
+  let max_idx = s_len - 1 in
+  let empty = function
+  | first when first < 0 -> (s, 0, 0)
+  | first when first > max_idx -> (s, s_len, s_len)
+  | first -> (s, first, first)
+  in
+  let last (* index *) = match last with
+  | None -> max_idx
+  | Some last -> if last > max_idx then max_idx else last
+  in
+  let first = if first < 0 then 0 else first in
+  if first > max_idx || last < 0 || first > last then empty first else
+  (s, first, last + 1 (* position *))
 
 (* Substrings *)
 
 type t = string * int * int
 
 let empty = (Astring_base.empty, 0, 0)
-let v = of_string_with_pos_range
 let start_pos (_, start, _) = start
 let stop_pos (_, _, stop) = stop
 let base_string (s, _, _) = s
@@ -102,70 +97,75 @@ let hash s = Hashtbl.hash s
 
 let start (s, start, _) = (s, start, start)
 let stop (s, _, stop) = (s, stop, stop)
+let base (s, _, _) = (s, 0, string_length s)
 
 let tail ?(rev = false) (s, start, stop as sub) =
   if start = stop then sub else
   if rev then (s, start, stop - 1) else (s, start + 1, stop)
 
-let base (s, _, _) = (s, 0, string_length s)
+let fextend ?max ~sat (s, start, stop) =
+  let max_idx = string_length s - 1 in
+  let max_idx = match max with
+  | None -> max_idx
+  | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+  | Some max -> let i = stop + max - 1 in if i > max_idx then max_idx else i
+  in
+  let rec loop i =
+    if i > max_idx then (s, start, i) else
+    if sat (string_unsafe_get s i) then loop (i + 1) else
+    (s, start, i)
+  in
+  loop stop
 
-let extend ?(rev = false) ?max ?(sat = (fun _ -> true)) (s, start, stop) =
-  if rev then begin
-    let min_idx = match max with
-    | None -> 0
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max -> let i = start - max in if i < 0 then 0 else i
-    in
-    let rec loop i =
-      if i < min_idx then (s, min_idx, stop) else
-      if sat (string_unsafe_get s i) then loop (i - 1) else
-      (s, i + 1, stop)
-    in
-    loop (start - 1)
-  end else begin
-    let max_idx = string_length s - 1 in
-    let max_idx = match max with
-    | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max -> let i = stop + max - 1 in if i > max_idx then max_idx else i
-    in
-    let rec loop i =
-      if i > max_idx then (s, start, i) else
-      if sat (string_unsafe_get s i) then loop (i + 1) else
-      (s, start, i)
-    in
-    loop stop
-  end
+let rextend ?max ~sat (s, start, stop) =
+  let min_idx = match max with
+  | None -> 0
+  | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+  | Some max -> let i = start - max in if i < 0 then 0 else i
+  in
+  let rec loop i =
+    if i < min_idx then (s, min_idx, stop) else
+    if sat (string_unsafe_get s i) then loop (i - 1) else
+    (s, i + 1, stop)
+  in
+  loop (start - 1)
 
-let reduce
-    ?(rev = false) ?max ?(sat = (fun _ -> true)) (s, start, stop as sub) =
+let extend ?(rev = false) ?max ?(sat = (fun _ -> true)) sub = match rev with
+| true  -> rextend ?max ~sat sub
+| false -> fextend ?max ~sat sub
+
+let freduce ?max ~sat (s, start, stop as sub) =
   if start = stop then sub else
-  if rev then begin
-    let min_idx = match max with
-    | None -> start
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max -> let i = stop - max in if i < start then start else i
-    in
-    let rec loop i =
-      if i < min_idx then (s, start, min_idx) else
-      if sat (string_unsafe_get s i) then loop (i - 1) else
-      (s, start, i + 1)
-    in
-    loop (stop - 1)
-  end else begin
-    let max_idx = stop - 1 in
-    let max_idx = match max with
-    | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
-    in
-    let rec loop i =
-      if i > max_idx then (s, i, stop) else
-      if sat (string_unsafe_get s i) then loop (i + 1) else
-      (s, i, stop)
-    in
-    loop start
-  end
+  let min_idx = match max with
+  | None -> start
+  | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+  | Some max -> let i = stop - max in if i < start then start else i
+  in
+  let rec loop i =
+    if i < min_idx then (s, start, min_idx) else
+    if sat (string_unsafe_get s i) then loop (i - 1) else
+    (s, start, i + 1)
+  in
+  loop (stop - 1)
+
+let rreduce ?max ~sat (s, start, stop as sub) =
+  if start = stop then sub else
+  let max_idx = stop - 1 in
+  let max_idx = match max with
+  | None -> max_idx
+  | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
+  | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
+  in
+  let rec loop i =
+    if i > max_idx then (s, i, stop) else
+    if sat (string_unsafe_get s i) then loop (i + 1) else
+    (s, i, stop)
+  in
+  loop start
+
+let reduce ?(rev = false) ?max ?(sat = (fun _ -> true)) sub = match rev with
+| true  -> rreduce ?max ~sat sub
+| false -> freduce ?max ~sat sub
 
 let extent (s0, start0, stop0) (s1, start1, stop1) =
   if s0 != s1 then invalid_arg err_base else
@@ -275,7 +275,7 @@ let for_all sat (s, start, stop) =
 let exists sat (s, start, stop) =
   Astring_base.exists sat s ~first:start ~last:(stop - 1)
 
-let equal_base (s0, _, _) (s1, _, _) = s0 == s1
+let same_base (s0, _, _) (s1, _, _) = s0 == s1
 
 let equal_bytes (s0, start0, stop0) (s1, start1, stop1) =
   if s0 == s1 && start0 = start1 && stop0 = stop1 then true else
@@ -321,20 +321,41 @@ let compare (s0, start0, stop0) (s1, start1, stop1) =
 
 (* Extracting substrings *)
 
-let with_range ?(first = 0) ?len (base, sub_start, sub_stop) =
-  let sub_len = sub_stop - sub_start in
-  let len = match len with None -> sub_len - first | Some l -> l in
-  let stop = first + len in
-  if first < 0 || stop > sub_len || stop < first
-  then invalid_arg (err_pos_len first len sub_len)
-  else (base, sub_start + first, sub_start + stop)
+let with_range ?(first = 0) ?(len = max_int) (s, start, stop) =
+  if len < 0 then invalid_arg (Astring_base.err_neg_len len) else
+  let s_len = stop - start in
+  let max_idx = s_len - 1 in
+  let empty = function
+  | first when first < 0 -> (s, start, start)
+  | first when first > max_idx -> (s, stop, stop)
+  | first -> (s, start + first, start + first)
+  in
+  if len = 0 then empty first else
+  let last (* index *) = match len with
+  | len when len = max_int -> max_idx
+  | len ->
+      let last = first + len - 1 in
+      if last > max_idx then max_idx else last
+  in
+  let first = if first < 0 then 0 else first in
+  if first > max_idx || last < 0 || first > last then empty first else
+  (s, start + first, start + last + 1 (* position *))
 
-let with_index_range ?(first = 0) ?last (base, sub_start, sub_stop) =
-  let sub_len = sub_stop - sub_start in
-  let last = match last with None -> sub_len - 1 | Some l -> l in
-  if first < 0 || last > sub_len - 1 || last < first
-  then invalid_arg (err_index_range first last sub_len)
-  else (base, sub_start + first, sub_start + last + 1)
+let with_index_range ?(first = 0) ? last (s, start, stop) =
+  let s_len = stop - start in
+  let max_idx = s_len - 1 in
+  let empty = function
+  | first when first < 0 -> (s, start, start)
+  | first when first > max_idx -> (s, stop, stop)
+  | first -> (s, start + first, start + first)
+  in
+  let last (* index *) = match last with
+  | None -> max_idx
+  | Some last -> if last > max_idx then max_idx else last
+  in
+  let first = if first < 0 then 0 else first in
+  if first > max_idx || last < 0 || first > last then empty first else
+  (s, start + first, start + last + 1 (* position *))
 
 let trim ?(drop = Astring_char.Ascii.is_white) (s, start, stop as sub) =
   let len = stop - start in
@@ -355,74 +376,48 @@ let trim ?(drop = Astring_char.Ascii.is_white) (s, start, stop as sub) =
   if left = start && right = max_pos then sub else
   (s, left, right)
 
-let span ?(rev = false) ?min ?max ?(sat = fun _ -> true)
-    (s, start, stop as sub)
-  =
-  let max_idx = stop - 1 in
-  if rev then begin
-    let min_idx = match max with
-    | None -> start
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max -> let i = stop - max in if i < start then start else i
-    in
-    let rec loop i =
-      if i >= min_idx && sat (sunsafe_get s i) then loop (i - 1 ) else
-      if i = max_idx then sub, (s, stop, stop) else
-      (s, start, i + 1), (s, i + 1, stop)
-    in
-    loop max_idx
-  end else begin
-    let max_idx = match max with
-    | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
-    in
-    let rec loop i =
-      if i <= max_idx && sat (sunsafe_get s i) then loop (i + 1) else
-      if i = start then (s, start, start), sub else
-      (s, start, i), (s, i, stop)
-    in
-    loop start
-  end
-
-let min_span ?(rev = false) ~min ?max ?(sat = fun _ -> true) (s, start, stop) =
+let fspan ~min ~max ~sat (s, start, stop as sub) =
   if min < 0 then invalid_arg (Astring_base.err_neg_min min) else
+  if max < 0 then invalid_arg (Astring_base.err_neg_max max) else
+  if min > max || max = 0 then ((s, start, start), sub) else
   let max_idx = stop - 1 in
-  if rev then begin
-    let min_idx = match max with
-    | None -> start
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max when min > max -> invalid_arg (Astring_base.err_min_max min max)
-    | Some max -> let i = stop - max in if i < start then start else i
-    in
-    let need_idx = stop - min - 1 in
-    let rec loop i =
-      if i >= min_idx && sat (sunsafe_get s i) then loop (i - 1) else
-      if i > need_idx then None else
-      Some ((s, start, i + 1), (s, i + 1, stop))
-    in
-    loop max_idx
-  end else begin
-    let max_idx = match max with
-    | None -> max_idx
-    | Some max when max < 0 -> invalid_arg (Astring_base.err_neg_max max)
-    | Some max when min > max -> invalid_arg (Astring_base.err_min_max min max)
-    | Some max -> let i = start + max - 1 in if i > max_idx then max_idx else i
-    in
-    let need_idx = start + min in
-    let rec loop i =
-      if i <= max_idx && sat (sunsafe_get s i) then loop (i + 1) else
-      if i < need_idx then None else
-      Some ((s, start, i), (s, i, stop))
-    in
-    loop start
-  end
+  let max_idx =
+    let k = start + max - 1 in (if k > max_idx then max_idx else k)
+  in
+  let need_idx = start + min in
+  let rec loop i =
+    if i <= max_idx && sat (sunsafe_get s i) then loop (i + 1) else
+    if i < need_idx || i = 0 then ((s, start, start), sub) else
+    if i = stop then (sub, (s, stop, stop)) else
+    (s, start, i), (s, i, stop)
+  in
+  loop start
+
+let rspan ~min ~max ~sat (s, start, stop as sub) =
+  if min < 0 then invalid_arg (Astring_base.err_neg_min min) else
+  if max < 0 then invalid_arg (Astring_base.err_neg_max max) else
+  if min > max || max = 0 then (sub, (s, stop, stop)) else
+  let max_idx = stop - 1 in
+  let min_idx = let k = stop - max in if k < start then start else k in
+  let need_idx = stop - min - 1 in
+  let rec loop i =
+    if i >= min_idx && sat (sunsafe_get s i) then loop (i - 1) else
+    if i > need_idx || i = max_idx then (sub, (s, stop, stop)) else
+    if i = start - 1 then ((s, start, start), sub) else
+    (s, start, i + 1), (s, i + 1, stop)
+  in
+  loop max_idx
+
+let span ?(rev = false) ?(min = 0) ?(max = max_int) ?(sat = fun _ -> true) sub =
+  match rev with
+  | true  -> rspan ~min ~max ~sat sub
+  | false -> fspan ~min ~max ~sat sub
 
 let take ?(rev = false) ?min ?max ?sat s =
-  (if rev then snd else fst) @@ span ~rev ~min ?max ?sat s
+  (if rev then snd else fst) @@ span ~rev ?min ?max ?sat s
 
 let drop ?(rev = false) ?min ?max ?sat s =
-  (if rev then fst else snd) @@ span ~rev ~min ?max ?sat s
+  (if rev then fst else snd) @@ span ~rev ?min ?max ?sat s
 
 let fcut ~sep:(sep, sep_start, sep_stop) (s, start, stop) =
   let sep_len = sep_stop - sep_start in
@@ -460,7 +455,9 @@ let rcut ~sep:(sep, sep_start, sep_stop) (s, start, stop) =
   in
   rscan (max_s_idx - max_sep_zidx)
 
-let cut ?(rev = false) ~sep s = if rev then rcut ~sep s else fcut ~sep s
+let cut ?(rev = false) ~sep s = match rev with
+| true  -> rcut ~sep s
+| false -> fcut ~sep s
 
 let add_sub ~no_empty s ~start ~stop acc =
   if start = stop then (if no_empty then acc else (s, start, start) :: acc) else
@@ -476,16 +473,18 @@ let fcuts ~no_empty ~sep:(sep, sep_start, sep_stop) (s, start, stop as sub) =
     if k > max_sep_zidx then
       let new_start = i + sep_len in
       scan new_start new_start (add_sub ~no_empty s ~start:sstart ~stop:i acc)
-    else if sunsafe_get s (i + k) = sunsafe_get sep (sep_start + k)
-    then check_sep sstart i (k + 1) acc
-    else scan sstart (i + 1) acc
+    else
+      if sunsafe_get s (i + k) = sunsafe_get sep (sep_start + k)
+      then check_sep sstart i (k + 1) acc
+      else scan sstart (i + 1) acc
   and scan sstart i acc =
     if i > max_s_idx then
       if sstart = start then (if no_empty && s_len = 0 then [] else [sub]) else
       List.rev (add_sub ~no_empty s ~start:sstart ~stop acc)
-    else if sunsafe_get s i = sunsafe_get sep sep_start
-    then check_sep sstart i 1 acc
-    else scan sstart (i + 1) acc
+    else
+      if sunsafe_get s i = sunsafe_get sep sep_start
+      then check_sep sstart i 1 acc
+      else scan sstart (i + 1) acc
   in
   scan start start []
 
@@ -499,22 +498,24 @@ let rcuts ~no_empty ~sep:(sep, sep_start, sep_stop) (s, start, stop as sub) =
     if k > max_sep_zidx then
       let start = i + sep_len in
       rscan i (i - sep_len) (add_sub ~no_empty s ~start ~stop:sstop acc)
-    else if sunsafe_get s (i + k) = sunsafe_get sep (sep_start + k)
-    then check_sep sstop i (k + 1) acc
-    else rscan sstop (i - 1) acc
+    else
+      if sunsafe_get s (i + k) = sunsafe_get sep (sep_start + k)
+      then check_sep sstop i (k + 1) acc
+      else rscan sstop (i - 1) acc
   and rscan sstop i acc =
     if i < start then
       if sstop = stop then (if no_empty && s_len = 0 then [] else [sub]) else
       add_sub ~no_empty s ~start ~stop:sstop acc
-    else if sunsafe_get s i = sunsafe_get sep sep_start
-    then check_sep sstop i 1 acc
-    else rscan sstop (i - 1) acc
+    else
+      if sunsafe_get s i = sunsafe_get sep sep_start
+      then check_sep sstop i 1 acc
+      else rscan sstop (i - 1) acc
   in
   rscan stop (max_s_idx - max_sep_zidx) []
 
-let cuts ?(rev = false) ?(empty = true) ~sep s =
-  let no_empty = not empty in
-  if rev then rcuts ~no_empty ~sep  s else fcuts ~no_empty ~sep  s
+let cuts ?(rev = false) ?(empty = true) ~sep s = match rev with
+| true  -> rcuts ~no_empty:(not empty) ~sep s
+| false -> fcuts ~no_empty:(not empty) ~sep s
 
 let fields
     ?(empty = false) ?(is_sep = Astring_char.Ascii.is_white)
@@ -536,53 +537,95 @@ let fields
 
 (* Traversing *)
 
-let find ?(rev = false) sat (s, start, stop) =
-  if rev then begin
-    let rec loop i =
-      if i < start then None else
-      if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i - 1)
-    in
-    loop (stop - 1)
-  end else begin
-    let max_idx = stop - 1 in
-    let rec loop i =
-      if i > max_idx then None else
-      if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i + 1)
-    in
-    loop start
-  end
+let ffind sat (s, start, stop) =
+  let max_idx = stop - 1 in
+  let rec loop i =
+    if i > max_idx then None else
+    if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i + 1)
+  in
+  loop start
 
-let find_sub ?(rev = false) ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
+let rfind sat (s, start, stop) =
+  let rec loop i =
+    if i < start then None else
+    if sat (sunsafe_get s i) then Some (s, i, i + 1) else loop (i - 1)
+  in
+  loop (stop - 1)
+
+let find ?(rev = false) sat sub = match rev with
+| true  -> rfind sat sub
+| false -> ffind sat sub
+
+let ffind_sub ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
   let len_sub = sub_stop - sub_start in
   let len_s = stop - start in
   if len_sub > len_s then None else
   let max_zidx_sub = len_sub - 1 in
-  if rev then begin
-    let rec loop i k =
-      if i < start then None else
-      if k > max_zidx_sub then Some (s, i, i + len_sub) else
-      if k > 0 then
-        if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
-        then loop i (k + 1)
-        else loop (i - 1) 0
-      else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
-      loop (i - 1) 0
-    in
-    loop (stop - len_sub) 0
-  end else begin
-    let max_idx_s = start + len_s - len_sub in
-    let rec loop i k =
-      if i > max_idx_s then None else
-      if k > max_zidx_sub then Some (s, i, i + len_sub) else
-      if k > 0 then
-        if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
-        then loop i (k + 1)
-        else loop (i + 1) 0
-      else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
-      loop (i + 1) 0
-    in
-    loop start 0
-  end
+  let max_idx_s = start + len_s - len_sub in
+  let rec loop i k =
+    if i > max_idx_s then None else
+    if k > max_zidx_sub then Some (s, i, i + len_sub) else
+    if k > 0 then
+      if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
+      then loop i (k + 1)
+      else loop (i + 1) 0
+    else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
+    loop (i + 1) 0
+  in
+  loop start 0
+
+let rfind_sub ~sub:(sub, sub_start, sub_stop) (s, start, stop) =
+  let len_sub = sub_stop - sub_start in
+  let len_s = stop - start in
+  if len_sub > len_s then None else
+  let max_zidx_sub = len_sub - 1 in
+  let rec loop i k =
+    if i < start then None else
+    if k > max_zidx_sub then Some (s, i, i + len_sub) else
+    if k > 0 then
+      if sunsafe_get sub (sub_start + k) = sunsafe_get s (i + k)
+      then loop i (k + 1)
+      else loop (i - 1) 0
+    else if sunsafe_get sub sub_start = sunsafe_get s i then loop i 1 else
+    loop (i - 1) 0
+  in
+  loop (stop - len_sub) 0
+
+let find_sub ?(rev = false) ~sub start = match rev with
+| true  -> rfind_sub ~sub start
+| false -> ffind_sub ~sub start
+
+let filter sat (s, start, stop) =
+  let len = stop - start in
+  if len = 0 then empty else
+  let b = Bytes.create len in
+  let max_idx = stop - 1 in
+  let rec loop b k i = (* k is the write index in b *)
+    if i > max_idx then
+      ((if k = len then bytes_unsafe_to_string b else Bytes.sub_string b 0 k),
+       0, k)
+    else
+    let c = sunsafe_get s i in
+    if sat c then (bytes_unsafe_set b k c; loop b (k + 1) (i + 1)) else
+    loop b k (i + 1)
+  in
+  loop b 0 start
+
+let filter_map f (s, start, stop) =
+  let len = stop - start in
+  if len = 0 then empty else
+  let b = Bytes.create len in
+  let max_idx = stop - 1 in
+  let rec loop b k i = (* k is the write index in b *)
+    if i > max_idx then
+      ((if k = len then bytes_unsafe_to_string b else Bytes.sub_string b 0 k),
+       0, k)
+    else
+    match f (sunsafe_get s i) with
+    | None -> loop b k (i + 1)
+    | Some c -> bytes_unsafe_set b k c; loop b (k + 1) (i + 1)
+  in
+  loop b 0 start
 
 let map f (s, start, stop) =
   let len = stop - start in

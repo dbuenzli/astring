@@ -407,7 +407,7 @@ type sub = Astring_sub.t
 
 module Sub = Astring_sub
 
-let sub = Sub.of_string_with_pos_range
+let sub = Sub.v
 let sub_with_range = Sub.of_string_with_range
 let sub_with_index_range = Sub.of_string_with_index_range
 

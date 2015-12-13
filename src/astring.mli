@@ -395,33 +395,48 @@ module String : sig
   (** [sub] is {!Sub.v}. *)
 
   val sub_with_range : ?first:int -> ?len:int -> string -> sub
-  (** [sub_with_range] is like {!with_range} but returns
-      a substring value. *)
+  (** [sub_with_range] is like {!with_range} but returns a substring
+      value. If [first] is smaller than [0] the empty string at the start
+      of [s] is returned. If [first] is greater than the last index of [s]
+      the empty string at the end of [s] is returned. *)
 
   val sub_with_index_range : ?first:int -> ?last:int -> string -> sub
   (** [sub_with_index_range] is like {!with_index_range} but returns
-      a substring value. *)
+      a substring value. If [first] and [last] are smaller than [0]
+      the empty string at the start of [s] is returned. If [first] and
+      is greater than the last index of [s] the empty string at
+      the end of [s] is returned. If [first > last] and [first] is an
+      index of [s] the empty string at [first] is returned. *)
 
   (** Substrings.
 
       A substring defines a possibly empty subsequence of bytes in
       a {e base} string.
 
-      Make sure you understand the basics about [string]
-      {{!idxpos}indices and positions}, they are essential
-      concepts to understand the semantics of functions.
+      The positions of a string [s] of length [l] are the slits found
+      before each byte and after the last byte of the string. They
+      are labelled from left to right by increasing number in the
+      range \[[0];[l]\].
+{v
+positions  0   1   2   3   4    l-1    l
+           +---+---+---+---+     +-----+
+  indices  | 0 | 1 | 2 | 3 | ... | l-1 |
+           +---+---+---+---+     +-----+
+v}
 
-      The subsequence is defined by a {e start} and a {e stop}
-      {{!idxpos}position}. The former is always smaller or equal to
-      the latter. When both positions are equal the substring is {e
-      empty}. Note that for a given base string there are as many
-      empty substrings as there are positions in the string.
+      The [i]th byte index is between positions [i] and [i+1].
+
+      Formally we define a substring of [s] as being a subsequence
+      of bytes defined by a {e start} and a {e stop} position. The
+      former is always smaller or equal to the latter. When both
+      positions are equal the substring is {e empty}. Note that for a
+      given base string there are as many empty substrings as there
+      are positions in the string.
 
       Like in strings, we refer to the contents of a substring using
       zero-based {{!idxpos}indices and positions}.
 
-      Substrings can be used to quickly devise parsers for your data,
-      see {{!examples}examples}. *)
+      See how to {{!examples}use} subtrings to parse data. *)
   module Sub : sig
 
     (** {1 Substrings} *)
@@ -430,16 +445,15 @@ module String : sig
     (** The type for substrings. *)
 
     val empty : sub
-    (** [empty] is the empty substring of the empty base string
-        {!String.empty}. *)
+    (** [empty] is the empty substring of the empty string {!String.empty}. *)
 
     val v : ?start:int -> ?stop:int -> string -> sub
     (** [v ~start ~stop s] is the substring of [s] that starts
         at position [start] (defaults to [0]) and stops at position
         [stop] (defaults to [String.length s]).
 
-        @raise Invalid_argument if [start] or [stop] are not {{!idxpos}valid
-        positions} of [s] or if [stop < start]. *)
+        @raise Invalid_argument if [start] or [stop] are not positions of
+        [s] or if [stop < start]. *)
 
     val start_pos : sub -> int
     (** [start_pos s] is [s]'s start position in the base string. *)
@@ -498,13 +512,13 @@ module String : sig
     val stop : sub -> sub
     (** [stop s] is the empty substring at the stop position of [s]. *)
 
-    val tail : ?rev:bool -> sub -> sub
-    (** [tail s] is [s] without its first ([rev] is [false], default)
-        or last ([rev] is [true]) byte or [s] if it is empty. *)
-
     val base : sub -> sub
     (** [base s] is a substring that spans the whole
         base string of [s]. *)
+
+    val tail : ?rev:bool -> sub -> sub
+    (** [tail s] is [s] without its first ([rev] is [false], default)
+        or last ([rev] is [true]) byte or [s] if it is empty. *)
 
     val extend : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> sub -> sub
     (** [extend ~rev ~max ~sat s] extends [s] by at most [max]
@@ -518,8 +532,8 @@ module String : sig
 
     val reduce : ?rev:bool -> ?max:int -> ?sat:(char -> bool) -> sub -> sub
     (** [reduce ~rev ~max ~sat s] reduces [s] by at most [max]
-        consecutive [sat] satisfying bytes of [s] located after [start
-        s] ([rev] is [false], default) or before [stop s] ([rev] is
+        consecutive [sat] satisfying bytes of [s] located before [stop
+        s] ([rev] is [false], default) or after [start s] ([rev] is
         [true]). If [max] is unspecified the reduction is limited by
         the extents of the substring [s]. [sat] defaults to [fun _ ->
         true].
@@ -576,8 +590,8 @@ module String : sig
     val exists : (char -> bool) -> sub -> bool
     (** [exists] is like {!String.exists} on the substring. *)
 
-    val equal_base : sub -> sub -> bool
-    (** [equal_base s s'] is [true] iff the substrings [s] and [s']
+    val same_base : sub -> sub -> bool
+    (** [same_base s s'] is [true] iff the substrings [s] and [s']
         have the same base. *)
 
     val equal_bytes : sub -> sub -> bool
@@ -605,17 +619,17 @@ module String : sig
 
     (** {1:extract Extracting substrings}
 
-        The extracted substrings are on the same base as the substring
-        [s] acted upon. This means that while positions and index
-        arguments are specified with respect to [s]'s contents, the
-        resulting substrings extents ({!start_pos}, {!stop_pos}) are
-        expressed as positions on the base string of [s]. *)
+        Extracted substrings are always on the same base as the substring
+        [s] acted upon. *)
 
     val with_range : ?first:int -> ?len:int -> sub -> sub
-    (** [with_range] is like {!String.with_range}. *)
+    (** [with_range] is like {!String.sub_with_range}. The indices are the
+        substring's zero-based ones, not those in the base string. *)
 
     val with_index_range : ?first:int -> ?last:int -> sub -> sub
-    (** [with_index_range] is like {!String.with_index_range} *)
+    (** [with_index_range] is like {!String.sub_with_index_range}. The
+        indices are the substring's zero-based ones, not those in the
+        base string. *)
 
     val trim : ?drop:(char -> bool) -> sub -> sub
     (** [trim] is like {!String.trim}. If all bytes are dropped returns
@@ -659,13 +673,24 @@ module String : sig
         different base. [None] is returned if there is no match of
         [sub] in [s]. *)
 
+    val filter : (char -> bool) -> sub -> sub
+    (** [filter sat s] is the substring made of the bytes of [s] that
+        satisfy [sat], in the same order. The result is on a new base
+        that holds only the filtered bytes. *)
+
+    val filter_map : (char -> char option) -> sub -> sub
+    (** [filter_map f s] is the substring made of the bytes of [s] as
+        mapped by [f], in order. The result is on a new base that
+        holds only the filtered bytes. *)
+
     val map : (char -> char) -> sub -> sub
     (** [map] is like {!String.map}. The result is on a new base that
         holds only the mapped bytes. *)
 
     val mapi : (int -> char -> char) -> sub -> sub
-    (** [mapi] is like {!String.mapi}. The result is on a new base that
-        holds only the mapped bytes. *)
+    (** [mapi] is like {!String.mapi}. The result is on a new base
+        that holds only the mapped bytes. The indices are the
+        substring's zero-based ones, not those in the base string. *)
 
     val fold_left : ('a -> char -> 'a) -> 'a -> sub -> 'a
     (** [fold_left] is like {!String.fold_left}. *)
@@ -677,8 +702,8 @@ module String : sig
     (** [iter] is like {!String.iter}. *)
 
     val iteri : (int -> char -> unit) -> sub -> unit
-    (** [iteri] is like {!String.iteri}, indices are the substring's
-        zero-based ones. *)
+    (** [iteri] is like {!String.iteri}. The indices are the
+        substring's zero-based ones, not those in the base string.  *)
 
     (** {1:pp Pretty printing} *)
 
@@ -794,28 +819,7 @@ module String : sig
 |-------------------------------------------|  base d
                             |---------------|  extent d c
                             |                  overlap d c
-v}
-
-
-
-        {1:idxpos String indices and positions}
-
-{v
-positions  0   1   2   3   4    l-1    l
-           +---+---+---+---+     +-----+
-  indices  | 0 | 1 | 2 | 3 | ... | l-1 |
-           +---+---+---+---+     +-----+
-v}
-
-        A string [s] of length [l] is a zero-based indexed sequence of [l]
-        bytes. An index [i] is {e valid} in [s] if it is in the range
-        \[[0];[l-1]\], it represents the [i]th byte of [s].
-
-        Before each byte and after the last byte of [s] we have {e
-        positions}. Positions are labelled from left to right by
-        increasing numbers in the range \[[0];[l]\]. These are the {e
-        valid positions} of [s]. The [i]th byte index is between positions [i]
-        and [i+1]. *)
+v} *)
   end
 
   (** {1:traverse Traversing strings} *)
@@ -1209,20 +1213,14 @@ end
     being said it is still better to first make your project compile
     with [-safe-string] and then port to [Astring].
 
-    If you are trying to replace an OCaml
-    {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/String.html#VALrindex_from}[String.rindex_from]}
-    with {!String.find}[ ~rev:true], note that the former adds one 1
-    to the specified search position in order to get the starting
-    search position. {!String.find} does not do that.
-
     The
-    {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/String.html#VALrindex_from}[String.sub]} function
-    is renamed to {!String.with_pos_len}. If you are working with
+    {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/String.html#VALsub}[String.sub]} function
+    is renamed to {!String.with_range}. If you are working with
     {!String.find} you may find it easier to use
     {!String.with_index_range} which takes indices as arguments and is thus
     directly usable with the result of {!String.find}. But in general
     index based string processing should be frown upon and replaced
-    by index-free {{!String.Sub}substring} based processing.
+    by {{!String.extract} substring extraction} combinators.
 
     {2:porttrim Porting [String.trim] usages}
 
@@ -1353,7 +1351,7 @@ fun s -> try
     let value, s = s |> skip_white |> parse_eq |> skip_white |> parse_value in
     parse_bindings (String.Map.add key value acc) (skip_white s)
   in
-  Some (parse_bindings String.Map.empty (skip_white @@ String.sub s))
+  Some (String.sub s |> skip_white |> parse_bindings String.Map.empty)
 with Exit -> None
 ]}
 

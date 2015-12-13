@@ -178,23 +178,36 @@ let reduce = test "String.Sub.reduce" @@ fun () ->
   let abcd = String.Sub.v ~start:0 ~stop:4 "abcdefg" in
   let cd = String.Sub.v ~start:2 ~stop:4 "abcdefg" in
   app_invalid ~pp:String.Sub.pp (fun s -> String.Sub.reduce ~max:(-1) s) abcd;
-  empty_pos (String.Sub.reduce empty) 2;
-  empty_pos (String.Sub.reduce ~rev:true empty) 2;
-  empty_pos (String.Sub.reduce ~max:2 empty) 2;
-  empty_pos (String.Sub.reduce ~sat:(fun c -> c < 'f') empty) 2;
-  empty_pos (String.Sub.reduce ~rev:true ~max:1 empty) 2;
-  empty_pos (String.Sub.reduce abcd) 4;
-  empty_pos (String.Sub.reduce ~rev:true abcd) 0;
-  eqs (String.Sub.reduce ~max:0 abcd) "abcd";
-  eqs (String.Sub.reduce ~max:0 abcd) "abcd";
-  eqs (String.Sub.reduce ~max:2 abcd) "cd";
-  eqs (String.Sub.reduce ~max:2 ~sat:(fun c -> c < 'c') abcd) "cd";
-  eqs (String.Sub.reduce ~max:2 ~sat:(fun c -> c < 'b') abcd) "bcd";
-  eqs (String.Sub.reduce ~max:2 ~sat:(fun c -> c < 'a') abcd) "abcd";
-  empty_pos (String.Sub.reduce ~rev:true ~max:2 ~sat:(fun c -> c > 'a') cd) 2;
-  eqs (String.Sub.reduce ~rev:true ~max:2 ~sat:(fun c -> c >= 'd') cd) "c";
-  eqs (String.Sub.reduce ~rev:true ~max:1 ~sat:(fun c -> c > 'c') cd) "c";
-  eqs (String.Sub.reduce ~sat:(fun c -> c > 'c') cd) "cd";
+  empty_pos (String.Sub.reduce ~rev:false empty) 2;
+  empty_pos (String.Sub.reduce ~rev:true  empty) 2;
+  empty_pos (String.Sub.reduce ~rev:false ~max:2 empty) 2;
+  empty_pos (String.Sub.reduce ~rev:true  ~max:2 empty) 2;
+  empty_pos (String.Sub.reduce ~rev:false ~sat:(fun c -> c < 'f') empty) 2;
+  empty_pos (String.Sub.reduce ~rev:true  ~sat:(fun c -> c < 'f') empty) 2;
+  empty_pos (String.Sub.reduce ~rev:false ~max:1 empty) 2;
+  empty_pos (String.Sub.reduce ~rev:true  ~max:1 empty) 2;
+  empty_pos (String.Sub.reduce ~rev:false abcd) 0;
+  empty_pos (String.Sub.reduce ~rev:true  abcd) 4;
+  eqs (String.Sub.reduce ~rev:false ~max:0 abcd) "abcd";
+  eqs (String.Sub.reduce ~rev:true  ~max:0 abcd) "abcd";
+  eqs (String.Sub.reduce ~rev:false ~max:0 abcd) "abcd";
+  eqs (String.Sub.reduce ~rev:true  ~max:0 abcd) "abcd";
+  eqs (String.Sub.reduce ~rev:false ~max:2 abcd) "ab";
+  eqs (String.Sub.reduce ~rev:true  ~max:2 abcd) "cd";
+  eqs (String.Sub.reduce ~rev:false ~max:2 ~sat:(fun c -> c < 'c') abcd) "abcd";
+  eqs (String.Sub.reduce ~rev:true  ~max:2 ~sat:(fun c -> c < 'c') abcd) "cd";
+  eqs (String.Sub.reduce ~rev:false ~max:2 ~sat:(fun c -> c > 'b') abcd) "ab";
+  eqs (String.Sub.reduce ~rev:true  ~max:2 ~sat:(fun c -> c < 'b') abcd) "bcd";
+  eqs (String.Sub.reduce ~rev:false ~max:2 ~sat:(fun c -> c > 'a') abcd) "ab";
+  eqs (String.Sub.reduce ~rev:true  ~max:2 ~sat:(fun c -> c < 'a') abcd) "abcd";
+  empty_pos (String.Sub.reduce ~rev:false ~max:2 ~sat:(fun c -> c > 'a') cd) 2;
+  empty_pos (String.Sub.reduce ~rev:true ~max:2 ~sat:(fun c -> c > 'a') cd) 4;
+  eqs (String.Sub.reduce ~rev:false ~max:2 ~sat:(fun c -> c >= 'd') cd) "c";
+  eqs (String.Sub.reduce ~rev:true ~max:2 ~sat:(fun c -> c >= 'd') cd) "cd";
+  eqs (String.Sub.reduce ~rev:false ~max:1 ~sat:(fun c -> c > 'c') cd) "c";
+  eqs (String.Sub.reduce ~rev:true ~max:1 ~sat:(fun c -> c > 'c') cd) "cd";
+  eqs (String.Sub.reduce ~rev:false ~sat:(fun c -> c > 'c') cd) "c";
+  eqs (String.Sub.reduce ~rev:true  ~sat:(fun c -> c > 'c') cd) "cd";
   ()
 
 let extent = test "String.Sub.extent" @@ fun () ->
@@ -508,15 +521,15 @@ let exists = test "String.Sub.exists" @@ fun () ->
   eq_bool (String.Sub.exists (fun c -> Char.to_int c < 0x34) s654) false;
   ()
 
-let equal_base = test "String.Sub.equal_base" @@ fun () ->
+let same_base = test "String.Sub.same_base" @@ fun () ->
   let abcd = "abcd" in
   let a = String.sub_with_index_range ~first:0 ~last:0 abcd in
   let ab = String.sub_with_index_range ~first:0 ~last:1 abcd in
   let abce = String.sub_with_index_range ~first:0 ~last:1 "abce" in
-  eq_bool (String.Sub.equal_base a ab) true;
-  eq_bool (String.Sub.equal_base ab a) true;
-  eq_bool (String.Sub.equal_base abce a) false;
-  eq_bool (String.Sub.equal_base abce a) false;
+  eq_bool (String.Sub.same_base a ab) true;
+  eq_bool (String.Sub.same_base ab a) true;
+  eq_bool (String.Sub.same_base abce a) false;
+  eq_bool (String.Sub.same_base abce a) false;
   ()
 
 let equal_bytes = test "String.Sub.equal_bytes" @@ fun () ->
@@ -671,76 +684,80 @@ let with_range = test "String.Sub.with_range" @@ fun () ->
   let invalid ?first ?len s =
     app_invalid ~pp:String.Sub.pp (String.Sub.with_range ?first ?len) s
   in
-  let base = "00abc1234" in
-  let abc = String.sub ~start:2 ~stop:5 base in
-  let a = String.sub ~start:2 ~stop:3 base in
-  let empty = String.sub ~start:2 ~stop:2 base in
-  invalid empty ~first:1 ~len:0;
-  invalid empty ~first:0 ~len:1;
-  invalid empty ~first:(-1) ~len:1;
-  invalid empty ~first:0 ~len:(-1);
-  eqs (String.Sub.with_range a ~first:0 ~len:0) "";
-  eqs (String.Sub.with_range a ~first:1 ~len:0) "";
-  invalid a ~first:1 ~len:1;
-  invalid a ~first:(-1) ~len:1;
-  eqs (String.Sub.with_range ~first:1 abc) "bc";
-  eqs (String.Sub.with_range ~first:2 abc) "c";
-  eqs (String.Sub.with_range ~first:3 abc) "";
-  invalid ~first:4 abc;
-  eqs (String.Sub.with_range abc ~first:0 ~len:0) "";
-  eqs (String.Sub.with_range abc ~first:0 ~len:1) "a";
-  eqs (String.Sub.with_range abc ~first:0 ~len:2) "ab";
-  invalid abc ~first:0 ~len:4;
-  eqs (String.Sub.with_range abc ~first:1 ~len:0) "";
-  eqs (String.Sub.with_range abc ~first:1 ~len:1) "b";
-  eqs (String.Sub.with_range abc ~first:1 ~len:2) "bc";
-  invalid abc ~first:1 ~len:3;
-  eqs (String.Sub.with_range abc ~first:2 ~len:0) "";
-  eqs (String.Sub.with_range abc ~first:2 ~len:1) "c";
-  invalid abc ~first:2 ~len:2;
-  eqs (String.Sub.with_range abc ~first:3 ~len:0) "";
-  invalid abc ~first:1 ~len:4;
-  invalid abc ~first:(-1) ~len:1;
-  ()
-
-let with_index_range = test "String.Sub.with_index_range" @@ fun () ->
-  let invalid ?first ?last s =
-    app_invalid ~pp:String.Sub.pp (String.Sub.with_index_range ?first ?last) s
+  let empty_pos ?first ?len s pos =
+    empty_pos (String.Sub.with_range ?first ?len s) pos
   in
   let base = "00abc1234" in
   let abc = String.sub ~start:2 ~stop:5 base in
   let a = String.sub ~start:2 ~stop:3 base in
   let empty = String.sub ~start:2 ~stop:2 base in
-  invalid empty;
-  invalid empty ~first:0 ~last:0;
-  invalid empty ~first:1 ~last:0;
-  invalid empty ~first:0 ~last:1;
-  invalid empty ~first:(-1) ~last:1;
-  invalid empty ~first:0 ~last:(-1);
-  invalid a ~first:0 ~last:1;
-  invalid a ~first:0 ~last:(-1);
-  invalid a ~first:0 ~last:2;
-  invalid a ~first:(-1) ~last:0;
+  empty_pos empty ~first:1 ~len:0 2;
+  empty_pos empty ~first:1 ~len:0 2;
+  empty_pos empty ~first:0 ~len:1 2;
+  empty_pos empty ~first:(-1) ~len:1 2;
+  invalid empty ~first:0 ~len:(-1);
+  eqs (String.Sub.with_range a ~first:0 ~len:0) "";
+  eqs (String.Sub.with_range a ~first:1 ~len:0) "";
+  empty_pos a ~first:1 ~len:1 3;
+  empty_pos a ~first:(-1) ~len:1 2;
+  eqs (String.Sub.with_range ~first:1 abc) "bc";
+  eqs (String.Sub.with_range ~first:2 abc) "c";
+  eqs (String.Sub.with_range ~first:3 abc) "";
+  empty_pos ~first:4 abc 5;
+  eqs (String.Sub.with_range abc ~first:0 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:0 ~len:1) "a";
+  eqs (String.Sub.with_range abc ~first:0 ~len:2) "ab";
+  eqs (String.Sub.with_range abc ~first:0 ~len:4) "abc";
+  eqs (String.Sub.with_range abc ~first:1 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:1 ~len:1) "b";
+  eqs (String.Sub.with_range abc ~first:1 ~len:2) "bc";
+  eqs (String.Sub.with_range abc ~first:1 ~len:3) "bc";
+  eqs (String.Sub.with_range abc ~first:2 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:2 ~len:1) "c";
+  eqs (String.Sub.with_range abc ~first:2 ~len:2) "c";
+  eqs (String.Sub.with_range abc ~first:3 ~len:0) "";
+  eqs (String.Sub.with_range abc ~first:1 ~len:4) "bc";
+  empty_pos abc ~first:(-1) ~len:1 2;
+  ()
+
+let with_index_range = test "String.Sub.with_index_range" @@ fun () ->
+ let empty_pos ?first ?last s pos =
+    empty_pos (String.Sub.with_index_range ?first ?last s) pos
+  in
+  let base = "00abc1234" in
+  let abc = String.sub ~start:2 ~stop:5 base in
+  let a = String.sub ~start:2 ~stop:3 base in
+  let empty = String.sub ~start:2 ~stop:2 base in
+  empty_pos empty 2;
+  empty_pos empty ~first:0 ~last:0 2;
+  empty_pos empty ~first:1 ~last:0 2;
+  empty_pos empty ~first:0 ~last:1 2;
+  empty_pos empty ~first:(-1) ~last:1 2;
+  empty_pos empty ~first:0 ~last:(-1) 2;
+  eqs (String.Sub.with_index_range ~first:0 ~last:2 a) "a";
+  empty_pos a ~first:0 ~last:(-1) 2;
+  eqs (String.Sub.with_index_range ~first:0 ~last:2 a) "a";
+  eqs (String.Sub.with_index_range ~first:(-1) ~last:0 a) "a";
   eqs (String.Sub.with_index_range ~first:1 abc) "bc";
   eqs (String.Sub.with_index_range ~first:2 abc) "c";
-  invalid ~first:3 abc;
-  invalid ~first:4 abc;
+  empty_pos ~first:3 abc 5;
+  empty_pos ~first:4 abc 5;
   eqs (String.Sub.with_index_range abc ~first:0 ~last:0) "a";
   eqs (String.Sub.with_index_range abc ~first:0 ~last:1) "ab";
-  invalid abc ~first:0 ~last:3;
+  eqs (String.Sub.with_index_range abc ~first:0 ~last:3) "abc";
   eqs (String.Sub.with_index_range abc ~first:1 ~last:1) "b";
   eqs (String.Sub.with_index_range abc ~first:1 ~last:2) "bc";
-  invalid abc ~first:1 ~last:0;
-  invalid abc ~first:1 ~last:3;
+  empty_pos abc ~first:1 ~last:0 3;
+  eqs (String.Sub.with_index_range abc ~first:1 ~last:3) "bc";
   eqs (String.Sub.with_index_range abc ~first:2 ~last:2) "c";
-  invalid abc ~first:2 ~last:0;
-  invalid abc ~first:2 ~last:1;
-  invalid abc ~first:2 ~last:3;
-  invalid abc ~first:3 ~last:0;
-  invalid abc ~first:3 ~last:1;
-  invalid abc ~first:3 ~last:2;
-  invalid abc ~first:3 ~last:3;
-  invalid abc ~first:(-1) ~last:0;
+  empty_pos abc ~first:2 ~last:0 4;
+  empty_pos abc ~first:2 ~last:1 4;
+  eqs (String.Sub.with_index_range abc ~first:2 ~last:3) "c";
+  empty_pos abc ~first:3 ~last:0 5;
+  empty_pos abc ~first:3 ~last:1 5;
+  empty_pos abc ~first:3 ~last:2 5;
+  empty_pos abc ~first:3 ~last:3 5;
+  eqs (String.Sub.with_index_range abc ~first:(-1) ~last:0) "a";
   ()
 
 let trim = test "String.Sub.trim" @@ fun () ->
@@ -1135,7 +1152,7 @@ let suite = suite "Base String functions"
       is_suffix;
       for_all;
       exists;
-      equal_base;
+      same_base;
       equal_bytes;
       compare_bytes;
       equal;
