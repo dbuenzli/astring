@@ -15,8 +15,8 @@ external char_to_byte : char -> int = "%identity"
 
 let bytes_unsafe_set = Bytes.unsafe_set
 let bytes_unsafe_to_string = Bytes.unsafe_to_string
-let bytes_unsafe_blit_string s si d di len =
-  Bytes.(unsafe_blit (unsafe_of_string s) si d di len)
+let bytes_unsafe_blit_string s sfirst d dfirst len =
+  Bytes.(unsafe_blit (unsafe_of_string s) sfirst d dfirst len)
 
 external string_length : string -> int = "%string_length"
 external string_equal : string -> string -> bool = "caml_string_equal"
@@ -24,9 +24,9 @@ external string_compare : string -> string -> int = "caml_string_compare"
 external string_safe_get : string -> int -> char = "%string_safe_get"
 external string_unsafe_get : string -> int -> char = "%string_unsafe_get"
 
-let unsafe_string_sub s si len =
+let unsafe_string_sub s first len =
   let b = Bytes.create len in
-  bytes_unsafe_blit_string s si b 0 len;
+  bytes_unsafe_blit_string s first b 0 len;
   Bytes.unsafe_to_string b
 
 (*---------------------------------------------------------------------------

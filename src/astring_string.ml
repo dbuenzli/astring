@@ -64,12 +64,12 @@ let concat ?(sep = empty) = function
     let rec loop i = function
     | [] -> bytes_unsafe_to_string b
     | str :: ss ->
-        let sep_pos = i in
-        let str_pos = i + sep_len in
+        let sep_first = i in
+        let str_first = i + sep_len in
         let str_len = length str in
-        bytes_unsafe_blit_string sep 0 b sep_pos sep_len;
-        bytes_unsafe_blit_string str 0 b str_pos str_len;
-        loop (str_pos + str_len) ss
+        bytes_unsafe_blit_string sep 0 b sep_first sep_len;
+        bytes_unsafe_blit_string str 0 b str_first str_len;
+        loop (str_first + str_len) ss
     in
     loop s_len ss
 
@@ -413,8 +413,6 @@ let sub_with_index_range = Sub.of_string_with_index_range
 
 (* Traversing *)
 
-(* Finding and keeping bytes *)
-
 let ffind ?start sat s =
   let max_idx = length s - 1 in
   let rec loop i =
@@ -659,7 +657,7 @@ module Set = struct
   let dump ppf ss =
     let pp_elt elt is_first =
       if is_first then () else Format.fprintf ppf "@ ";
-      Format.fprintf ppf "%a" dump elt;
+      Format.fprintf ppf "%a" dump_str elt;
       false
     in
     Format.fprintf ppf "@[<1>{";

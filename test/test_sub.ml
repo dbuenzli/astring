@@ -594,92 +594,6 @@ let compare = test "String.Sub.compare" @@ fun () ->
 
 (* Extracting substrings *)
 
-let span = test "String.Sub.span" @@ fun () ->
-  let eq_pair (l0, r0) (l1, r1) =
-    String.Sub.equal l0 l1 && String.Sub.equal r0 r1
-  in
-  let eq = eq ~eq:eq_pair ~pp:pp_pair in
-  let base = "0ab cd0" in
-  let empty = String.sub ~start:3 ~stop:3 base in
-  let ab_cd = String.sub ~start:1 ~stop:6 base in
-  let ab = String.sub ~start:1 ~stop:3 base in
-  let _cd = String.sub ~start:3 ~stop:6 base in
-  let cd = String.sub ~start:4 ~stop:6 base in
-  let ab_ = String.sub ~start:1 ~stop:4 base in
-  let a = String.sub ~start:1 ~stop:2 base in
-  let b_cd = String.sub ~start:2 ~stop:6 base in
-  let b = String.sub ~start:2 ~stop:3 base in
-  let d = String.sub ~start:5 ~stop:6 base in
-  let ab_c = String.sub ~start:1 ~stop:5 base in
-  eq (String.Sub.span ~sat:Char.Ascii.is_white ab_cd)
-    (String.Sub.start ab_cd, ab_cd);
-  eq (String.Sub.span ~sat:Char.Ascii.is_letter ab_cd) (ab, _cd);
-  eq (String.Sub.span ~max:1 ~sat:Char.Ascii.is_letter ab_cd) (a, b_cd);
-  eq (String.Sub.span ~max:0 ~sat:Char.Ascii.is_letter ab_cd)
-    (String.Sub.start ab_cd, ab_cd);
-  eq (String.Sub.span ~rev:true ~sat:Char.Ascii.is_white ab_cd)
-    (ab_cd, String.Sub.stop ab_cd);
-  eq (String.Sub.span ~rev:true ~sat:Char.Ascii.is_letter ab_cd) (ab_, cd);
-  eq (String.Sub.span ~rev:true ~max:1 ~sat:Char.Ascii.is_letter ab_cd)
-    (ab_c, d);
-  eq (String.Sub.span ~rev:true ~max:0 ~sat:Char.Ascii.is_letter ab_cd)
-    (ab_cd, String.Sub.stop ab_cd);
-  eq (String.Sub.span ~sat:Char.Ascii.is_letter ab) (ab, String.Sub.stop ab);
-  eq (String.Sub.span ~max:1 ~sat:Char.Ascii.is_letter ab)
-    (a, b);
-  eq (String.Sub.span ~rev:true ~max:1 ~sat:Char.Ascii.is_letter ab)
-    (a, b);
-  eq (String.Sub.span ~max:1 ~sat:Char.Ascii.is_white ab)
-    (String.Sub.start ab, ab);
-  eq (String.Sub.span ~rev:true ~sat:Char.Ascii.is_white empty) (empty, empty);
-  eq (String.Sub.span ~sat:Char.Ascii.is_white empty) (empty, empty);
-  ()
-
-(*
-let min_span = test "String.Sub.min_span" @@ fun () ->
-  let base = "0ab cd0" in
-  let eq = eq_option ~eq:eq_pair ~pp:pp_pair in
-  let empty = String.sub ~start:3 ~stop:3 base in
-  let ab_cd = String.sub ~start:1 ~stop:6 base in
-  let ab = String.sub ~start:1 ~stop:3 base in
-  let _cd = String.sub ~start:3 ~stop:6 base in
-  let cd = String.sub ~start:4 ~stop:6 base in
-  let ab_ = String.sub ~start:1 ~stop:4 base in
-  let a = String.sub ~start:1 ~stop:2 base in
-  let b_cd = String.sub ~start:2 ~stop:6 base in
-  let d = String.sub ~start:5 ~stop:6 base in
-  let ab_c = String.sub ~start:1 ~stop:5 base in
-  let invalid = app_invalid ~pp:(pp_option pp_pair) in
-  invalid (fun s -> String.Sub.min_span ~min:2 ~max:1 s) ab_cd;
-  invalid (fun s -> String.Sub.min_span ~min:(-2) ~max:1 s) ab_cd;
-  invalid (fun s -> String.Sub.min_span ~min:0 ~max:(-1) s) ab_cd;
-  eq (String.Sub.min_span ~min:1 ~sat:Char.Ascii.is_white ab_cd)
-    None;
-  eq (String.Sub.min_span ~min:2 ~sat:Char.Ascii.is_letter ab_cd)
-    (Some (ab, _cd));
-  eq (String.Sub.min_span ~min:1 ~max:1 ~sat:Char.Ascii.is_letter ab_cd)
-    (Some (a, b_cd));
-  eq (String.Sub.min_span ~min:3 ~sat:Char.Ascii.is_letter ab_cd)
-    None;
-  eq (String.Sub.min_span ~rev:true ~min:1 ~sat:Char.Ascii.is_white ab_cd)
-    None;
-  eq (String.Sub.min_span ~rev:true ~min:2 ~sat:Char.Ascii.is_letter ab_cd)
-    (Some (ab_, cd));
-  eq (String.Sub.min_span ~rev:true ~min:1 ~max:1 ~sat:Char.Ascii.is_letter
-        ab_cd) (Some (ab_c, d));
-  eq (String.Sub.min_span ~rev:true ~min:3 ~sat:Char.Ascii.is_letter ab_cd)
-    None;
-  eq (String.Sub.min_span ~min:0 ~max:0 empty) (Some (empty, empty));
-  eq (String.Sub.min_span ~min:1 ~max:1 empty) None;
-  ()
-*)
-
-let drop = test "String.Sub.drop" @@ fun () ->
-  eqs (String.Sub.drop ~sat:(Char.equal 'a') (String.sub "aabbaa")) "bbaa";
-  eqs (String.Sub.drop ~rev:true ~sat:(Char.equal 'a') (String.sub "aabbaa"))
-    "aabb";
-  ()
-
 let with_range = test "String.Sub.with_range" @@ fun () ->
   let invalid ?first ?len s =
     app_invalid ~pp:String.Sub.pp (String.Sub.with_range ?first ?len) s
@@ -758,6 +672,90 @@ let with_index_range = test "String.Sub.with_index_range" @@ fun () ->
   empty_pos abc ~first:3 ~last:2 5;
   empty_pos abc ~first:3 ~last:3 5;
   eqs (String.Sub.with_index_range abc ~first:(-1) ~last:0) "a";
+  ()
+
+let span = test "String.Sub.{span,take,drop}" @@ fun () ->
+  let eq_pair (l0, r0) (l1, r1) = String.Sub.(equal l0 l1 && equal r0 r1) in
+  let eq_pair = eq ~eq:eq_pair ~pp:pp_pair in
+  let eq ?(rev = false) ?min ?max ?sat s (sl, sr as spec) =
+    let (l, r as pair) = String.Sub.span ~rev ?min ?max ?sat s in
+    let t = String.Sub.take ~rev ?min ?max ?sat s in
+    let d = String.Sub.drop ~rev ?min ?max ?sat s in
+    eq_pair pair spec;
+    eq_sub t (if rev then sr else sl);
+    eq_sub d (if rev then sl else sr);
+  in
+  let invalid ?rev ?min ?max ?sat s =
+    app_invalid ~pp:pp_pair (String.Sub.span ?rev ?min ?max ?sat) s
+  in
+  let base = "0ab cd0" in
+  let empty = String.sub ~start:3 ~stop:3 base in
+  let ab_cd = String.sub ~start:1 ~stop:6 base in
+  let ab = String.sub ~start:1 ~stop:3 base in
+  let _cd = String.sub ~start:3 ~stop:6 base in
+  let cd = String.sub ~start:4 ~stop:6 base in
+  let ab_ = String.sub ~start:1 ~stop:4 base in
+  let a = String.sub ~start:1 ~stop:2 base in
+  let b_cd = String.sub ~start:2 ~stop:6 base in
+  let b = String.sub ~start:2 ~stop:3 base in
+  let d = String.sub ~start:5 ~stop:6 base in
+  let ab_c = String.sub ~start:1 ~stop:5 base in
+  eq ~rev:false ~min:1 ~max:0 ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:true ~min:1 ~max:0 ab_cd (ab_cd, String.Sub.stop ab_cd);
+  eq ~sat:Char.Ascii.is_white ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~sat:Char.Ascii.is_letter ab_cd (ab, _cd);
+  eq ~max:1 ~sat:Char.Ascii.is_letter ab_cd (a, b_cd);
+  eq ~max:0 ~sat:Char.Ascii.is_letter ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:true ~sat:Char.Ascii.is_white ab_cd (ab_cd, String.Sub.stop ab_cd);
+  eq ~rev:true ~sat:Char.Ascii.is_letter ab_cd (ab_, cd);
+  eq ~rev:true ~max:1 ~sat:Char.Ascii.is_letter ab_cd (ab_c, d);
+  eq ~rev:true ~max:0 ~sat:Char.Ascii.is_letter ab_cd (ab_cd,
+                                                       String.Sub.stop ab_cd);
+  eq ~sat:Char.Ascii.is_letter ab (ab, String.Sub.stop ab);
+  eq ~max:1 ~sat:Char.Ascii.is_letter ab (a, b);
+  eq ~rev:true ~max:1 ~sat:Char.Ascii.is_letter ab (a, b);
+  eq ~max:1 ~sat:Char.Ascii.is_white ab (String.Sub.start ab, ab);
+  eq ~rev:true ~sat:Char.Ascii.is_white empty (empty, empty);
+  eq ~sat:Char.Ascii.is_white empty (empty, empty);
+
+  invalid ~rev:false ~min:(-1) empty;
+  invalid ~rev:true  ~min:(-1) empty;
+  invalid ~rev:false ~max:(-1) empty;
+  invalid ~rev:true ~max:(-1) empty;
+  eq ~rev:false empty (empty,empty);
+  eq ~rev:true  empty (empty,empty);
+  eq ~rev:false ~min:0 ~max:0 empty (empty,empty);
+  eq ~rev:true  ~min:0 ~max:0 empty (empty,empty);
+  eq ~rev:false ~min:1 ~max:0 empty (empty,empty);
+  eq ~rev:true  ~min:1 ~max:0 empty (empty,empty);
+  eq ~rev:false ~max:0 ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:true  ~max:0 ab_cd (ab_cd, String.Sub.stop ab_cd);
+  eq ~rev:false ~max:2 ab_cd (ab, _cd);
+  eq ~rev:true  ~max:2 ab_cd (ab_, cd);
+  eq ~rev:false ~min:6 ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:true  ~min:6 ab_cd (ab_cd, String.Sub.stop ab_cd);
+  eq ~rev:false ab_cd (ab_cd, String.Sub.stop ab_cd);
+  eq ~rev:true  ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:false ~max:30 ab_cd (ab_cd, String.Sub.stop ab_cd);
+  eq ~rev:true  ~max:30 ab_cd (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:false ~sat:Char.Ascii.is_white ab_cd (String.Sub.start ab_cd,ab_cd);
+  eq ~rev:true  ~sat:Char.Ascii.is_white ab_cd (ab_cd,String.Sub.stop ab_cd);
+  eq ~rev:false ~sat:Char.Ascii.is_letter ab_cd (ab, _cd);
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ab_cd (ab_, cd);
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~max:0 ab_cd (String.Sub.start ab_cd,
+                                                        ab_cd);
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~max:0 ab_cd (ab_cd,
+                                                        String.Sub.stop ab_cd);
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~max:1 ab_cd (a, b_cd);
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~max:1 ab_cd (ab_c, d);
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~min:2 ~max:1 ab_cd
+    (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~min:2 ~max:1 ab_cd
+    (ab_cd, String.Sub.stop ab_cd);
+  eq ~rev:false ~sat:Char.Ascii.is_letter ~min:3 ab_cd
+    (String.Sub.start ab_cd, ab_cd);
+  eq ~rev:true  ~sat:Char.Ascii.is_letter ~min:3 ab_cd
+    (ab_cd, String.Sub.stop ab_cd);
   ()
 
 let trim = test "String.Sub.trim" @@ fun () ->
@@ -1157,10 +1155,9 @@ let suite = suite "Base String functions"
       compare_bytes;
       equal;
       compare;
-      span;
-      drop;
       with_range;
       with_index_range;
+      span;
       trim;
       cut;
       cuts;

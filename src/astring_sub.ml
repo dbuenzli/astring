@@ -11,13 +11,12 @@ let sunsafe_get = string_unsafe_get
 (* Errors *)
 
 let strf = Format.asprintf
-let err_base = "not on the same physical base"
+let err_base = "not on the same base string"
 let err_empty_sub pos = strf "empty substring [%d;%d]" pos pos
-
-(* From strings *)
-
 let err_pos_range start stop len =
   strf "invalid start:%d stop:%d for position range [0;%d]" start stop len
+
+(* From strings *)
 
 let v ?(start = 0) ?stop s =
   let s_len = string_length s in

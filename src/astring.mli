@@ -24,7 +24,9 @@ val strf : ('a, Format.formatter, unit, string) format4 -> 'a
 val ( ^ ) : string -> string -> string
 (** [s ^ s'] is {!String.append}. *)
 
-(** Characters (bytes in fact). *)
+(** Characters (bytes in fact).
+
+    {e Release %%VERSION%% - %%MAINTAINER%% } *)
 module Char : sig
 
   (** {1 Bytes} *)
@@ -433,10 +435,10 @@ v}
       given base string there are as many empty substrings as there
       are positions in the string.
 
-      Like in strings, we refer to the contents of a substring using
-      zero-based {{!idxpos}indices and positions}.
+      Like in strings, we index the bytes of a substring using
+      zero-based indices.
 
-      See how to {{!examples}use} subtrings to parse data. *)
+      See how to {{!examples}use} substrings to parse data. *)
   module Sub : sig
 
     (** {1 Substrings} *)
@@ -496,8 +498,8 @@ v}
     (** [to_string s] is the bytes of [s] as a string. *)
 
     val rebase : sub -> sub
-    (** [rebase s] is [v (to_string s)]. This puts [s] on a new base
-        made solely of its bytes. *)
+    (** [rebase s] is [v (to_string s)]. This puts [s] on a base
+        string made solely of its bytes. *)
 
     val hash : sub -> int
     (** [hash s] is {!Hashtbl.hash s}. *)
@@ -513,8 +515,7 @@ v}
     (** [stop s] is the empty substring at the stop position of [s]. *)
 
     val base : sub -> sub
-    (** [base s] is a substring that spans the whole
-        base string of [s]. *)
+    (** [base s] is a substring that spans the whole base string of [s]. *)
 
     val tail : ?rev:bool -> sub -> sub
     (** [tail s] is [s] without its first ([rev] is [false], default)
@@ -545,7 +546,7 @@ v}
         positions of [s] and [s'].
 
         @raise Invalid_argument if [s] and [s'] are not on the same base
-        according to physical equality. *)
+        string according to physical equality. *)
 
     val overlap : sub -> sub -> sub option
     (** [overlap s s'] is the smallest substring that includes all the
@@ -553,18 +554,18 @@ v}
         such positions. Note that the overlap substring may be empty.
 
         @raise Invalid_argument if [s] and [s'] are not on the same base
-        according to physical equality. *)
+        string according to physical equality. *)
 
     (** {1:append Appending substrings} *)
 
     val append : sub -> sub -> sub
     (** [append s s'] is like {!String.append}. The substrings can be
-        on different bases and the result is on a base that holds
+        on different bases and the result is on a base string that holds
         exactly the appended bytes. *)
 
     val concat : ?sep:sub -> sub list -> sub
     (** [concat ~sep ss] is like {!String.concat}. The substrings can
-        all be on different bases and the result is on a base that
+        all be on different bases and the result is on a base string that
         holds exactly the concatenated bytes. *)
 
     (** {1:pred Predicates} *)
@@ -574,15 +575,15 @@ v}
 
     val is_prefix : affix:sub -> sub -> bool
     (** [is_prefix] is like {!String.is_prefix}. Only bytes
-        are compared, [affix] can be on a different base. *)
+        are compared, [affix] can be on a different base string. *)
 
     val is_infix : affix:sub -> sub -> bool
     (** [is_infix] is like {!String.is_infix}. Only bytes
-        are compared, [affix] can be on a different base. *)
+        are compared, [affix] can be on a different base string. *)
 
     val is_suffix : affix:sub -> sub -> bool
     (** [is_suffix] is like {!String.is_suffix}. Only bytes
-        are compared, [affix] can be on a different base. *)
+        are compared, [affix] can be on a different base string. *)
 
     val for_all : (char -> bool) -> sub -> bool
     (** [for_all] is like {!String.for_all} on the substring. *)
@@ -592,35 +593,35 @@ v}
 
     val same_base : sub -> sub -> bool
     (** [same_base s s'] is [true] iff the substrings [s] and [s']
-        have the same base. *)
+        have the same base string according to physical equality. *)
 
     val equal_bytes : sub -> sub -> bool
     (** [equal_bytes s s'] is [true] iff the substrings [s] and [s'] have
         exactly the same bytes. The substrings can be on a different
-        base. *)
+        base string. *)
 
     val compare_bytes : sub -> sub -> int
     (** [compare_bytes s s'] compares the bytes of [s] and [s]' in
         lexicographical order. The substrings can be on a different
-        base. *)
+        base string. *)
 
     val equal : sub -> sub -> bool
     (** [equal s s'] is [true] iff [s] and [s'] have the same positions.
 
         @raise Invalid_argument if [s] and [s'] are not on the same base
-        according to physical equality. *)
+        string according to physical equality. *)
 
     val compare : sub -> sub -> int
     (** [compare s s'] compares the positions of [s] and [s'] in
         lexicographical order.
 
         @raise Invalid_argument if [s] and [s'] are not on the same base
-        according to physical equality. *)
+        string according to physical equality. *)
 
     (** {1:extract Extracting substrings}
 
-        Extracted substrings are always on the same base as the substring
-        [s] acted upon. *)
+        Extracted substrings are always on the same base string as the
+        substring [s] acted upon. *)
 
     val with_range : ?first:int -> ?len:int -> sub -> sub
     (** [with_range] is like {!String.sub_with_range}. The indices are the
@@ -637,7 +638,7 @@ v}
 
     val span : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
       sub -> (sub * sub)
-    (** [span] is like {!String.span}. For a string [s] a left
+    (** [span] is like {!String.span}. For a substring [s] a left
         empty span is [start s] and a right empty span is [stop s]. *)
 
     val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) ->
@@ -649,10 +650,11 @@ v}
     (** [drop] is like {!String.drop}. *)
 
     val cut : ?rev:bool -> sep:sub -> sub -> (sub * sub) option
-    (** [cut] is like {!String.cut}. [sep] can be on a different base. *)
+    (** [cut] is like {!String.cut}. [sep] can be on a different base string *)
 
     val cuts : ?rev:bool -> ?empty:bool -> sep:sub -> sub -> sub list
-    (** [cuts] is like {!String.cuts}. [sep] can be on a different base. *)
+    (** [cuts] is like {!String.cuts}. [sep] can be on a different base
+        string *)
 
     val fields : ?empty:bool -> ?is_sep:(char -> bool) -> sub -> sub list
     (** [fields] is like {!String.fields}. *)
@@ -670,27 +672,25 @@ v}
         spans the first match of [sub] in [s] after position [start s]
         ([rev] is [false], defaults) or before [stop s] ([rev] is
         [false]). Only bytes are compared and [sub] can be on a
-        different base. [None] is returned if there is no match of
+        different base string. [None] is returned if there is no match of
         [sub] in [s]. *)
 
     val filter : (char -> bool) -> sub -> sub
-    (** [filter sat s] is the substring made of the bytes of [s] that
-        satisfy [sat], in the same order. The result is on a new base
-        that holds only the filtered bytes. *)
+    (** [filter sat s] is like {!String.filter}. The result is on a
+        base string that holds only the filtered bytes. *)
 
     val filter_map : (char -> char option) -> sub -> sub
-    (** [filter_map f s] is the substring made of the bytes of [s] as
-        mapped by [f], in order. The result is on a new base that
-        holds only the filtered bytes. *)
+    (** [filter_map f s] is like {!String.filter_map}. The result is on a
+        base string that holds only the filtered bytes. *)
 
     val map : (char -> char) -> sub -> sub
-    (** [map] is like {!String.map}. The result is on a new base that
+    (** [map] is like {!String.map}. The result is on a base string that
         holds only the mapped bytes. *)
 
     val mapi : (int -> char -> char) -> sub -> sub
-    (** [mapi] is like {!String.mapi}. The result is on a new base
-        that holds only the mapped bytes. The indices are the
-        substring's zero-based ones, not those in the base string. *)
+    (** [mapi] is like {!String.mapi}. The result is on a base string that
+        holds only the mapped bytes. The indices are the substring's
+        zero-based ones, not those in the base string. *)
 
     val fold_left : ('a -> char -> 'a) -> 'a -> sub -> 'a
     (** [fold_left] is like {!String.fold_left}. *)
@@ -854,7 +854,7 @@ v} *)
 
   val filter_map : (char -> char option) -> string -> string
   (** [filter_map f s] is the string made of the bytes of [s] as mapped by
-      [f], in order. *)
+      [f], in the same order. *)
 
   val map : (char -> char) -> string -> string
   (** [map f s] is [s'] with [s'.[i] = f s.[i]] for all indices [i]
