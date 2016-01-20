@@ -713,11 +713,11 @@ let span = test "String.Sub.{span,take,drop}" @@ fun () ->
                                                        String.Sub.stop ab_cd);
   eq ~sat:Char.Ascii.is_letter ab (ab, String.Sub.stop ab);
   eq ~max:1 ~sat:Char.Ascii.is_letter ab (a, b);
+  eq ~sat:Char.Ascii.is_letter b (b, empty);
   eq ~rev:true ~max:1 ~sat:Char.Ascii.is_letter ab (a, b);
   eq ~max:1 ~sat:Char.Ascii.is_white ab (String.Sub.start ab, ab);
   eq ~rev:true ~sat:Char.Ascii.is_white empty (empty, empty);
   eq ~sat:Char.Ascii.is_white empty (empty, empty);
-
   invalid ~rev:false ~min:(-1) empty;
   invalid ~rev:true  ~min:(-1) empty;
   invalid ~rev:false ~max:(-1) empty;

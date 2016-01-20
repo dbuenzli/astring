@@ -381,7 +381,7 @@ let fspan ~min ~max ~sat (s, start, stop as sub) =
   if min > max || max = 0 then ((s, start, start), sub) else
   let max_idx = stop - 1 in
   let max_idx =
-    let k = start + max - 1 in (if k > max_idx then max_idx else k)
+    let k = start + max - 1 in (if k > max_idx || k < 0 then max_idx else k)
   in
   let need_idx = start + min in
   let rec loop i =
