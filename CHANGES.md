@@ -1,3 +1,5 @@
+v0.8.1 2015-02-22 La Forclaz (VS)
+---------------------------------
 
 - Fix a bug in `String.Sub.span`.
 
