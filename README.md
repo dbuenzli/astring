@@ -14,7 +14,7 @@ and names, adds a few missing functions and fully exploits OCaml's
 newfound string immutability.
 
 Astring depends only on the OCaml standard library. It is distributed
-under the BSD3 license.
+under the ISC license.
 
 Home page: http://erratique.ch/software/astring  
 Contact: Daniel Bünzli `<daniel.buenzl i@erratique.ch>`
