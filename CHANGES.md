@@ -1,5 +1,8 @@
 
+
+- Build depend on topkg.
 - Relicense from BSD3 to ISC.
+
 
 v0.8.1 2015-02-22 La Forclaz (VS)
 ---------------------------------

@@ -8,11 +8,10 @@ bug-reports: "https://github.com/dbuenzli/astring/issues"
 tags: [ "string" "org:erratique" ]
 license: "ISC"
 available: [ ocaml-version >= "4.01.0"]
-depends: [ "ocamlfind" {build}
-           "ocamlbuild" {build} ]
-build:
-[
-  [ "ocaml" "pkg/git.ml" ]
-  [ "ocaml" "pkg/build.ml" "native=%{ocaml-native}%"
-                           "native-dynlink=%{ocaml-native-dynlink}%" ]
-]
+depends: [
+  "ocamlfind" {build}
+  "ocamlbuild" {build}
+  "topkg" {build} ]
+build: [[
+  "ocaml" "pkg/pkg.ml" "build"
+          "--installer" "true" ]]

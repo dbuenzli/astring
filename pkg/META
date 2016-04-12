@@ -3,18 +3,16 @@ version = "%%VERSION%%"
 
 requires = "bytes"
 archive(byte) = "astring.cma"
-archive(byte, plugin) = "astring.cma"
 archive(native) = "astring.cmxa"
-archive(native, plugin) = "astring.cmxs"
-exists_if = "astring.cma"
+plugin(byte) = "astring.cma"
+plugin(native) = "astring.cmxs"
 
 package "top" (
   description = "Astring toplevel support"
   version = "%%VERSION%%"
   requires = "astring"
   archive(byte) = "astring_top.cma"
-  archive(byte, plugin) = "astring_top.cma"
   archive(native) = "astring_top.cmxa"
-  archive(native, plugin) = "astring_top.cmxs"
-  exists_if = "astring_top.cma"
+  plugin(byte) = "astring_top.cma"
+  plugin(native) = "astring_top.cmxs"
 )
