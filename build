@@ -12,13 +12,10 @@ action ()
     case $1 in
         default) action lib;;
         lib) $OCAMLBUILD astring.cma astring.cmxa ;;
-        test|tests)
-            action lib
-            $OCAMLBUILD test/tests.otarget
-            ;;
+        test|tests) topkg build && topkg teste ;;
         doc)     shift; topkg doc --dev $* ;;
         api-doc) shift; topkg doc $* ;;
-        clean)   $OCAMLBUILD -clean ;;
+        clean)   topkg clean ;;
         *)       $OCAMLBUILD $* ;;
     esac
 }
