@@ -382,8 +382,8 @@ module String : sig
       @raise Invalid_argument if [sep] is the empty string. *)
 
   val fields : ?empty:bool -> ?is_sep:(char -> bool) -> string -> string list
-  (** [fields ~empty ~is_sep s] is the list of (possibly empty) substrings
-      made of bytes that are not separated by a byte for which [is_sep] is
+  (** [fields ~empty ~is_sep s] is the list of (possibly empty)
+      substrings that are delimited by bytes for which [is_sep] is
       [true].  Empty substrings are omitted in the list if [empty] is
       [false] (defaults to [true]). [is_sep] defaults to
       {!Char.Ascii.is_white}. *)
