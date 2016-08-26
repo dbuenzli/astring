@@ -1,6 +1,6 @@
 Astring — Alternative String module for OCaml
 -------------------------------------------------------------------------------
-Release %%VERSION%%
+%%VERSION%%
 
 Astring exposes an alternative `String` module for OCaml. This module
 tries to balance minimality and expressiveness for basic, index-free,
