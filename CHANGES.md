@@ -1,5 +1,6 @@
 
 
+- Fix String.Set.pp not using the `sep` argument.
 - Build depend on topkg.
 - Relicense from BSD3 to ISC.
 

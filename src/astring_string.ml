@@ -646,10 +646,10 @@ let dump ppf s =
 module Set = struct
   include Set.Make (String)
 
-  let pp ?(sep = Format.pp_print_cut) pp_elt ppf ss =
+  let pp ?sep:(pp_sep = Format.pp_print_cut) pp_elt ppf ss =
     let pp_elt elt is_first =
-      if is_first then () else Format.fprintf ppf "@ ";
-      Format.fprintf ppf "%a" pp_elt elt; false
+      if is_first then () else pp_sep ppf ();
+      pp_elt ppf elt; false
     in
     ignore (fold pp_elt ss true)
 
