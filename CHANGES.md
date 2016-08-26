@@ -1,9 +1,9 @@
-
+v0.8.2 2016-08-26 Zagreb
+------------------------
 
 - Fix String.Set.pp not using the `sep` argument.
 - Build depend on topkg.
 - Relicense from BSD3 to ISC.
-
 
 v0.8.1 2015-02-22 La Forclaz (VS)
 ---------------------------------
