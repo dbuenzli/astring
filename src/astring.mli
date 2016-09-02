@@ -14,7 +14,7 @@
     {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/String.html}[String]}
     module, the {{!port}porting guide} and a few {{!examples}examples}.
 
-    {e Release %%VERSION%% - %%MAINTAINER%% } *)
+    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
 
 (** {1 String} *)
 
@@ -26,7 +26,7 @@ val ( ^ ) : string -> string -> string
 
 (** Characters (bytes in fact).
 
-    {e Release %%VERSION%% - %%MAINTAINER%% } *)
+    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
 module Char : sig
 
   (** {1 Bytes} *)
@@ -191,7 +191,7 @@ end
     strings and {b assumes} strings are immutable. See the
     {{!port}porting guide}.
 
-    {e Release %%VERSION%% - %%MAINTAINER%% } *)
+    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
 module String : sig
 
   (** {1 String} *)
