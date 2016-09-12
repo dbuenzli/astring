@@ -61,7 +61,7 @@ let concat ?(sep = empty) = function
       | [] ->
           if sep_len = 0 then l else
           let max_sep_count = Sys.max_string_length / sep_len in
-          if sep_count > max_sep_count then -1 else
+          if sep_count < 0 || sep_count > max_sep_count then -1 else
           sep_count * sep_len + l
     in
     let cat_len = cat_len 0 s_len ss in
