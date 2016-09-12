@@ -65,7 +65,7 @@ let concat ?(sep = empty) = function
           sep_count * sep_len + l
     in
     let cat_len = cat_len 0 s_len ss in
-    if cat_len < 0 then invalid_arg Astring_base.err_max_string else
+    if cat_len < 0 then invalid_arg Astring_base.err_max_string_len else
     let b = Bytes.create cat_len in
     bytes_unsafe_blit_string s 0 b 0 s_len;
     let rec loop i = function
