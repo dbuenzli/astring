@@ -198,11 +198,18 @@ let concat ?sep:(sep, sep_start, _ as sep_sub = empty) = function
 | (s, start, _ as sub) :: ss ->
     let sub_len = length sub in
     let sep_len = length sep_sub in
-    let rec cat_len l = function
-    | [] -> l
-    | h :: t -> cat_len (l + sep_len + length h) t
+    let rec cat_len sep_count l ss =
+      if l < 0 then l else
+      match ss with
+      | s :: ss -> cat_len (sep_count + 1) (l + length s) ss
+      | [] ->
+          if sep_len = 0 then l else
+          let max_sep_count = Sys.max_string_length / sep_len in
+          if sep_count > max_sep_count then -1 else
+          sep_count * sep_len + l
     in
-    let cat_len = cat_len sub_len ss in
+    let cat_len = cat_len 0 sub_len ss in
+    if cat_len < 0 then invalid_arg Astring_base.err_max_string_len else
     let b = Bytes.create cat_len in
     bytes_unsafe_blit_string s start b 0 sub_len;
     let rec loop i = function
