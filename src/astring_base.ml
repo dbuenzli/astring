@@ -17,6 +17,7 @@ let err_empty_sep = "~sep is an empty string"
 let err_neg_max max = strf "negative ~max (%d)" max
 let err_neg_min max = strf "negative ~min (%d)" max
 let err_neg_len len = strf "negative length (%d)" len
+let err_max_string = "max string size exceeded"
 
 (* Base *)
 
