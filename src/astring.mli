@@ -980,7 +980,7 @@ v} *)
 
   (** {1 String sets and maps} *)
 
-  type set
+  type set = Set.Make(String).t
   (** The type for string sets. *)
 
   (** String sets. *)
@@ -989,7 +989,7 @@ v} *)
     (** {1 String sets} *)
 
     include Set.S with type elt := string
-                   and type t := set
+                   and type t := Set.Make(String).t
 
     type t = set
 
@@ -1038,7 +1038,7 @@ v} *)
         [ppf]. *)
   end
 
-  type +'a map
+  type +'a map = 'a Map.Make(String).t
   (** The type for maps from strings to values of type 'a. *)
 
   (** String maps. *)
@@ -1047,7 +1047,7 @@ v} *)
     (** {1 String maps} *)
 
     include Map.S with type key := string
-                   and type 'a t := 'a map
+                   and type 'a t := 'a Map.Make(String).t
 
     type 'a t = 'a map
 
