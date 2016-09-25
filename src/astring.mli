@@ -1024,6 +1024,12 @@ v} *)
     val of_list : string list -> set
     (** [of_list ss] is a set from the list [ss]. *)
 
+    val of_stdlib_set : Set.Make(String).t -> set
+    (** [of_stdlib_set s] is a set from the stdlib-compatible set [s]. *)
+
+    val to_stdlib_set : set -> Set.Make(String).t
+    (** [to_stdlib_set s] is the stdlib-compatible set equivalent to [s]. *)
+
     val pp : ?sep:(Format.formatter -> unit -> unit) ->
       (Format.formatter -> string -> unit) ->
         Format.formatter -> set -> unit
@@ -1085,6 +1091,12 @@ v} *)
     val of_list : (string * 'a) list -> 'a map
     (** [of_list bs] is [List.fold_left (fun m (k, v) -> add k v m) empty
         bs]. *)
+
+    val of_stdlib_map : 'a Map.Make(String).t -> 'a map
+    (** [of_stdlib_map m] is a map from the stdlib-compatible map [m]. *)
+
+    val to_stdlib_map : 'a map -> 'a Map.Make(String).t
+    (** [to_stdlib_map m] is the stdlib-compatible map equivalent to [m]. *)
 
     val pp : ?sep:(Format.formatter -> unit -> unit) ->
       (Format.formatter -> string * 'a -> unit) -> Format.formatter ->
