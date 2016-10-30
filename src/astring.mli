@@ -670,8 +670,8 @@ v}
     val find_sub :?rev:bool -> sub:sub -> sub -> sub option
     (** [find_sub ~rev ~sub s] is the substring of [s] (if any) that
         spans the first match of [sub] in [s] after position [start s]
-        ([rev] is [false], defaults) or before [stop s] ([rev] is
-        [false]). Only bytes are compared and [sub] can be on a
+        ([rev] is [false], default) or before [stop s] ([rev] is
+        [true]). Only bytes are compared and [sub] can be on a
         different base string. [None] is returned if there is no match of
         [sub] in [s]. *)
 
