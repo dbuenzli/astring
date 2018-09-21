@@ -904,7 +904,7 @@ v} *)
     val is_valid : string -> bool
     (** [is_valid s] is [true] iff only for all indices [i] of [s],
         [s.[i]] is an US-ASCII character, i.e. a byte in the range
-        \[[0x00];[0x1F]\]. *)
+        \[[0x00];[0x7F]\]. *)
 
     (** {1:case Casing transforms}
 
@@ -1201,7 +1201,7 @@ end
        {{:http://www.ecma-international.org/publications/standards/Ecma-094.htm}ISO/IEC
        8859-1} code points). This means they can safely be used on
        UTF-8 encoded strings, they will of course only deal with the
-       US-ASCII subset U+0000 to U+001F of
+       US-ASCII subset U+0000 to U+007F of
        {{:http://unicode.org/glossary/#unicode_scalar_value} Unicode
        scalar values}.}
      {- The module has pre-applied exception safe {!String.Set}
