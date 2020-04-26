@@ -1231,7 +1231,7 @@ end
     {!String.find} you may find it easier to use
     {!String.with_index_range} which takes indices as arguments and is thus
     directly usable with the result of {!String.find}. But in general
-    index based string processing should be frown upon and replaced
+    index based string processing should be frowned upon and replaced
     by {{!String.extract} substring extraction} combinators.
 
     {2:porttrim Porting [String.trim] usages}
