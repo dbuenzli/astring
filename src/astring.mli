@@ -362,7 +362,7 @@ module String : sig
 
       @raise Invalid_argument if [sep] is the empty string. *)
 
-  val cuts : ?rev:bool -> ?empty:bool -> sep:string -> string -> string list
+  val cuts : ?rev:bool -> ?empty:bool -> ?times:int -> sep:string -> string -> string list
   (** [cuts sep s] is the list of all substrings of [s] that are
       delimited by matches of the non empty separator string
       [sep]. Empty substrings are omitted in the list if [empty] is
@@ -374,7 +374,10 @@ module String : sig
       again, that is separator matches can't overlap. If there is no
       separator match in [s], the list [[s]] is returned.
 
-      The following invariants hold:
+      The string is cut by a maximum amount of [times] when [times > 0].
+      (Defaults to [0])
+
+      The following invariants hold, regardless of the value of [times]:
       {ul
       {- [concat ~sep (cuts ~empty:true ~sep s) = s]}
       {- [cuts ~empty:true ~sep s <> []]}}
@@ -652,7 +655,7 @@ v}
     val cut : ?rev:bool -> sep:sub -> sub -> (sub * sub) option
     (** [cut] is like {!String.cut}. [sep] can be on a different base string *)
 
-    val cuts : ?rev:bool -> ?empty:bool -> sep:sub -> sub -> sub list
+    val cuts : ?rev:bool -> ?empty:bool -> ?times:int -> sep:sub -> sub -> sub list
     (** [cuts] is like {!String.cuts}. [sep] can be on a different base
         string *)
 

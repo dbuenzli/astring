@@ -724,6 +724,158 @@ let cuts = test "String.cuts" @@ fun () ->
   eql (String.cuts ~rev ~empty:false ~sep:"aa" "aaaaa") ["a";];
   eql (String.cuts ~rev ~empty:true ~sep:"aa" "aaaaaa") [""; ""; ""; ""];
   eql (String.cuts ~rev ~empty:false ~sep:"aa" "aaaaaa") [];
+  let times = 1 in
+  eql (String.cuts ~times ~empty:true  ~sep:"," "") [""];
+  eql (String.cuts ~times ~empty:false ~sep:"," "") [];
+  eql (String.cuts ~times ~empty:true  ~sep:"," ",") [""; ""];
+  eql (String.cuts ~times ~empty:false ~sep:"," ",") [];
+  eql (String.cuts ~times ~empty:true  ~sep:"," ",,") [""; ","];
+  eql (String.cuts ~times ~empty:false ~sep:"," ",,") [","];
+  eql (String.cuts ~times ~empty:true  ~sep:"," ",,,") [""; ",,"];
+  eql (String.cuts ~times ~empty:false ~sep:"," ",,,") [",,"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," "123") ["123"];
+  eql (String.cuts ~times ~empty:false ~sep:"," "123") ["123"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," ",123") [""; "123"];
+  eql (String.cuts ~times ~empty:false ~sep:"," ",123") ["123"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," "123,") ["123"; ""];
+  eql (String.cuts ~times ~empty:false ~sep:"," "123,") ["123"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," "1,2,3") ["1"; "2,3"];
+  eql (String.cuts ~times ~empty:false ~sep:"," "1,2,3") ["1"; "2,3"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," "1, 2, 3") ["1"; " 2, 3"];
+  eql (String.cuts ~times ~empty:false ~sep:"," "1, 2, 3") ["1"; " 2, 3"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," ",1,2,,3,") [""; "1,2,,3,"];
+  eql (String.cuts ~times ~empty:false ~sep:"," ",1,2,,3,") ["1,2,,3,"];
+  eql (String.cuts ~times ~empty:true  ~sep:"," ", 1, 2,, 3,")
+    [""; " 1, 2,, 3,"];
+  eql (String.cuts ~times ~empty:false ~sep:"," ", 1, 2,, 3,") [" 1, 2,, 3,"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "") [""];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "") [];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "<>") [""; ""];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "<>") [];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "<><>") [""; "<>"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "<><>") ["<>"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "<><><>") [""; "<><>"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "<><><>") ["<><>"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "123") [ "123" ];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "123") [ "123" ];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "<>123") [""; "123"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "<>123") ["123"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "123<>") ["123"; ""];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "123<>") ["123"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "1<>2<>3") ["1"; "2<>3"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "1<>2<>3") ["1"; "2<>3"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "1<> 2<> 3") ["1"; " 2<> 3"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "1<> 2<> 3") ["1"; " 2<> 3"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "<>1<>2<><>3<>")
+    [""; "1<>2<><>3<>"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "<>1<>2<><>3<>") ["1<>2<><>3<>";];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" "<> 1<> 2<><> 3<>")
+    [""; " 1<> 2<><> 3<>"];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" "<> 1<> 2<><> 3<>")[" 1<> 2<><> 3<>"];
+  eql (String.cuts ~times ~empty:true  ~sep:"<>" ">>><>>>><>>>><>>>>")
+    [">>>"; ">>><>>>><>>>>" ];
+  eql (String.cuts ~times ~empty:false ~sep:"<>" ">>><>>>><>>>><>>>>")
+    [">>>"; ">>><>>>><>>>>" ];
+  eql (String.cuts ~times ~empty:true  ~sep:"<->" "<->>->") [""; ">->"];
+  eql (String.cuts ~times ~empty:false ~sep:"<->" "<->>->") [">->"];
+  eql (String.cuts ~times ~empty:true  ~sep:"aa" "aa") [""; ""];
+  eql (String.cuts ~times ~empty:false ~sep:"aa" "aa") [];
+  eql (String.cuts ~times ~empty:true  ~sep:"aa" "aaa") [""; "a"];
+  eql (String.cuts ~times ~empty:false ~sep:"aa" "aaa") ["a"];
+  eql (String.cuts ~times ~empty:true  ~sep:"aa" "aaaa") [""; "aa"];
+  eql (String.cuts ~times ~empty:false ~sep:"aa" "aaaa") ["aa"];
+  eql (String.cuts ~times ~empty:true  ~sep:"aa" "aaaaa") [""; "aaa"];
+  eql (String.cuts ~times ~empty:false ~sep:"aa" "aaaaa") ["aaa"];
+  eql (String.cuts ~times ~empty:true  ~sep:"aa" "aaaaaa") [""; "aaaa"];
+  eql (String.cuts ~times ~empty:false ~sep:"aa" "aaaaaa") ["aaaa"];
+
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," "") [""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," "") [];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," ",") [""; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," ",") [];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," ",,") [","; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," ",,") [","];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," ",,,") [",,"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," ",,,") [",,"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," "123") ["123"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," "123") ["123"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," ",123") [""; "123"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," ",123") ["123"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," "123,") ["123"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," "123,") ["123"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," "1,2,3") ["1,2"; "3"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," "1,2,3") ["1,2"; "3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," "1, 2, 3") ["1, 2"; " 3"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," "1, 2, 3") ["1, 2"; " 3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," ",1,2,,3,")
+    [",1,2,,3"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," ",1,2,,3,") [",1,2,,3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"," ", 1, 2,, 3,")
+    [", 1, 2,, 3"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"," ", 1, 2,, 3,") [", 1, 2,, 3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "") [""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "") [];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "<>") [""; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "<>") [];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "<><>") ["<>"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "<><>") ["<>"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "<><><>") ["<><>"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "<><><>") ["<><>"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "123") [ "123" ];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "123") [ "123" ];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "<>123") [""; "123"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "<>123") ["123"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "123<>") ["123"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "123<>") ["123";];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "1<>2<>3") ["1<>2"; "3"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "1<>2<>3") ["1<>2"; "3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "1<> 2<> 3") ["1<> 2"; " 3"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "1<> 2<> 3") ["1<> 2"; " 3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "<>1<>2<><>3<>")
+    ["<>1<>2<><>3"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "<>1<>2<><>3<>")
+    ["<>1<>2<><>3"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" "<> 1<> 2<><> 3<>")
+                                   ["<> 1<> 2<><> 3";""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" "<> 1<> 2<><> 3<>")
+                                   ["<> 1<> 2<><> 3";];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<>" ">>><>>>><>>>><>>>>")
+                                   [">>><>>>><>>>>"; ">>>" ];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<>" ">>><>>>><>>>><>>>>")
+                                   [">>><>>>><>>>>"; ">>>" ];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"<->" "<->>->") [""; ">->"];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"<->" "<->>->") [">->"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"aa" "aa") [""; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"aa" "aa") [];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"aa" "aaa") ["a"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"aa" "aaa") ["a"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"aa" "aaaa") ["aa"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"aa" "aaaa") ["aa"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"aa" "aaaaa") ["aaa"; "";];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"aa" "aaaaa") ["aaa"];
+  eql (String.cuts ~rev ~times ~empty:true ~sep:"aa" "aaaaaa") ["aaaa"; ""];
+  eql (String.cuts ~rev ~times ~empty:false ~sep:"aa" "aaaaaa") ["aaaa"];
+
+  eql (String.cuts ~times:0 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (String.cuts ~times:1 ~empty:true  ~sep:"," ",,,") [""; ",,"];
+  eql (String.cuts ~times:2 ~empty:true  ~sep:"," ",,,") [""; ""; ","];
+  eql (String.cuts ~times:3 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (String.cuts ~times:4 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (String.cuts ~rev ~times:0 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (String.cuts ~rev ~times:1 ~empty:true  ~sep:"," ",,,") [",,"; ""];
+  eql (String.cuts ~rev ~times:2 ~empty:true  ~sep:"," ",,,") [","; ""; ""];
+  eql (String.cuts ~rev ~times:3 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (String.cuts ~rev ~times:4 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (String.cuts ~times:0 ~empty:false  ~sep:"," ",,,") [];
+  eql (String.cuts ~times:1 ~empty:false  ~sep:"," ",,,") [",,"];
+  eql (String.cuts ~times:2 ~empty:false  ~sep:"," ",,,") [","];
+  eql (String.cuts ~times:3 ~empty:false  ~sep:"," ",,,") [];
+  eql (String.cuts ~times:4 ~empty:false  ~sep:"," ",,,") [];
+  eql (String.cuts ~rev ~times:0 ~empty:false  ~sep:"," ",,,") [];
+  eql (String.cuts ~rev ~times:1 ~empty:false  ~sep:"," ",,,") [",,"];
+  eql (String.cuts ~rev ~times:2 ~empty:false  ~sep:"," ",,,") [","];
+  eql (String.cuts ~rev ~times:3 ~empty:false  ~sep:"," ",,,") [];
+  eql (String.cuts ~rev ~times:4 ~empty:false  ~sep:"," ",,,") [];
   ()
 
 let fields = test "String.fields" @@ fun () ->

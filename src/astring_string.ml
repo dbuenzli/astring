@@ -341,57 +341,69 @@ let add_sub ~no_empty s ~start ~stop acc =
   if start = stop then (if no_empty then acc else empty :: acc) else
   unsafe_string_sub s start (stop - start) :: acc
 
-let fcuts ~no_empty ~sep s =
+let fcuts ~no_empty ~sep ~limit s =
   let sep_len = length sep in
   if sep_len = 0 then invalid_arg Astring_base.err_empty_sep else
   let s_len = length s in
   let max_sep_idx = sep_len - 1 in
   let max_s_idx = s_len - sep_len in
-  let rec check_sep start i k acc =
+  let rec check_sep start i k times acc =
     if k > max_sep_idx then
       let new_start = i + sep_len in
-      scan new_start new_start (add_sub ~no_empty s ~start ~stop:i acc)
+      scan new_start new_start (times + 1)
+        (add_sub ~no_empty s ~start ~stop:i acc)
     else
       if unsafe_get s (i + k) = unsafe_get sep k
-      then check_sep start i (k + 1) acc
-      else scan start (i + 1) acc
-  and scan start i acc =
-    if i > max_s_idx then
+      then check_sep start i (k + 1) times acc
+      else scan start (i + 1) times acc
+  and scan start i times acc =
+    let finished =
+      i > max_s_idx
+      || match limit with | None -> false | Some limit -> times >= limit
+    in
+    if finished then
       if start = 0 then (if no_empty && s_len = 0 then [] else [s]) else
       List.rev (add_sub ~no_empty s ~start ~stop:s_len acc)
     else
       if unsafe_get s i = unsafe_get sep 0
-      then check_sep start i 1 acc
-      else scan start (i + 1) acc
+      then check_sep start i 1 times acc
+      else scan start (i + 1) times acc
   in
-  scan 0 0 []
+  scan 0 0 0 []
 
-let rcuts ~no_empty ~sep s =
+let rcuts ~no_empty ~sep ~limit s =
   let sep_len = length sep in
   if sep_len = 0 then invalid_arg Astring_base.err_empty_sep else
   let s_len = length s in
   let max_sep_idx = sep_len - 1 in
   let max_s_idx = s_len - 1 in
-  let rec check_sep stop i k acc =
+  let rec check_sep stop i k times acc =
     if k > max_sep_idx then
       let start = i + sep_len in
-      rscan i (i - sep_len) (add_sub ~no_empty s ~start ~stop acc)
+      rscan i (i - sep_len) (times + 1)
+        (add_sub ~no_empty s ~start ~stop acc)
     else if unsafe_get s (i + k) = unsafe_get sep k
-    then check_sep stop i (k + 1) acc
-    else rscan stop (i - 1) acc
-  and rscan stop i acc =
-    if i < 0 then
+    then check_sep stop i (k + 1) times acc
+    else rscan stop (i - 1) times acc
+  and rscan stop i times acc =
+    let finished =
+      i < 0
+      || match limit with | None -> false | Some limit -> times >= limit
+    in
+    if finished then
       if stop = s_len then (if no_empty && s_len = 0 then [] else [s]) else
       add_sub ~no_empty s ~start:0 ~stop:stop acc
     else if unsafe_get s i = unsafe_get sep 0
-    then check_sep stop i 1 acc
-    else rscan stop (i - 1) acc
+    then check_sep stop i 1 times acc
+    else rscan stop (i - 1) times acc
   in
-  rscan s_len (max_s_idx - max_sep_idx) []
+  rscan s_len (max_s_idx - max_sep_idx) 0 []
 
-let cuts ?(rev = false) ?(empty = true) ~sep s = match rev with
-| true  -> rcuts ~no_empty:(not empty) ~sep s
-| false -> fcuts ~no_empty:(not empty) ~sep s
+let cuts ?(rev = false) ?(empty = true) ?(times = 0) ~sep s =
+  let times = if times < 1 then None else Some times in
+  match rev with
+  | true  -> rcuts ~no_empty:(not empty) ~limit:times ~sep s
+  | false -> fcuts ~no_empty:(not empty) ~limit:times ~sep s
 
 let fields ?(empty = true) ?(is_sep = Astring_char.Ascii.is_white) s =
   let no_empty = not empty in

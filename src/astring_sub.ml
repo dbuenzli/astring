@@ -469,59 +469,71 @@ let add_sub ~no_empty s ~start ~stop acc =
   if start = stop then (if no_empty then acc else (s, start, start) :: acc) else
   (s, start, stop) :: acc
 
-let fcuts ~no_empty ~sep:(sep, sep_start, sep_stop) (s, start, stop as sub) =
+let fcuts ~no_empty ~sep:(sep, sep_start, sep_stop) ~limit (s, start, stop as sub) =
   let sep_len = sep_stop - sep_start in
   if sep_len = 0 then invalid_arg Astring_base.err_empty_sep else
   let s_len = stop - start in
   let max_sep_zidx = sep_len - 1 in
   let max_s_idx = stop - sep_len in
-  let rec check_sep sstart i k acc =
+  let rec check_sep sstart i k times acc =
     if k > max_sep_zidx then
       let new_start = i + sep_len in
-      scan new_start new_start (add_sub ~no_empty s ~start:sstart ~stop:i acc)
+      scan new_start new_start (times + 1)
+        (add_sub ~no_empty s ~start:sstart ~stop:i acc)
     else
       if sunsafe_get s (i + k) = sunsafe_get sep (sep_start + k)
-      then check_sep sstart i (k + 1) acc
-      else scan sstart (i + 1) acc
-  and scan sstart i acc =
-    if i > max_s_idx then
+      then check_sep sstart i (k + 1) times acc
+      else scan sstart (i + 1) times acc
+  and scan sstart i times acc =
+    let finished =
+      i > max_s_idx
+      || match limit with | None -> false | Some limit -> times >= limit
+    in
+    if finished then
       if sstart = start then (if no_empty && s_len = 0 then [] else [sub]) else
       List.rev (add_sub ~no_empty s ~start:sstart ~stop acc)
     else
       if sunsafe_get s i = sunsafe_get sep sep_start
-      then check_sep sstart i 1 acc
-      else scan sstart (i + 1) acc
+      then check_sep sstart i 1 times acc
+      else scan sstart (i + 1) times acc
   in
-  scan start start []
+  scan start start 0 []
 
-let rcuts ~no_empty ~sep:(sep, sep_start, sep_stop) (s, start, stop as sub) =
+let rcuts ~no_empty ~sep:(sep, sep_start, sep_stop) ~limit (s, start, stop as sub) =
   let sep_len = sep_stop - sep_start in
   if sep_len = 0 then invalid_arg Astring_base.err_empty_sep else
   let s_len = stop - start in
   let max_sep_zidx = sep_len - 1 in
   let max_s_idx = stop - 1 in
-  let rec check_sep sstop i k acc =
+  let rec check_sep sstop i k times acc =
     if k > max_sep_zidx then
       let start = i + sep_len in
-      rscan i (i - sep_len) (add_sub ~no_empty s ~start ~stop:sstop acc)
+      rscan i (i - sep_len) (times + 1)
+        (add_sub ~no_empty s ~start ~stop:sstop acc)
     else
       if sunsafe_get s (i + k) = sunsafe_get sep (sep_start + k)
-      then check_sep sstop i (k + 1) acc
-      else rscan sstop (i - 1) acc
-  and rscan sstop i acc =
-    if i < start then
+      then check_sep sstop i (k + 1) times acc
+      else rscan sstop (i - 1) times acc
+  and rscan sstop i times acc =
+    let finished =
+      i < start
+      || match limit with | None -> false | Some limit -> times >= limit
+    in
+    if finished then
       if sstop = stop then (if no_empty && s_len = 0 then [] else [sub]) else
       add_sub ~no_empty s ~start ~stop:sstop acc
     else
       if sunsafe_get s i = sunsafe_get sep sep_start
-      then check_sep sstop i 1 acc
-      else rscan sstop (i - 1) acc
+      then check_sep sstop i 1 times acc
+      else rscan sstop (i - 1) times acc
   in
-  rscan stop (max_s_idx - max_sep_zidx) []
+  rscan stop (max_s_idx - max_sep_zidx) 0 []
 
-let cuts ?(rev = false) ?(empty = true) ~sep s = match rev with
-| true  -> rcuts ~no_empty:(not empty) ~sep s
-| false -> fcuts ~no_empty:(not empty) ~sep s
+let cuts ?(rev = false) ?(empty = true) ?(times = 0) ~sep s =
+  let times = if times < 1 then None else Some times in
+  match rev with
+  | true  -> rcuts ~no_empty:(not empty) ~limit:times ~sep s
+  | false -> fcuts ~no_empty:(not empty) ~limit:times ~sep s
 
 let fields
     ?(empty = false) ?(is_sep = Astring_char.Ascii.is_white)

@@ -858,8 +858,8 @@ let cuts = test "String.Sub.cuts" @@ fun () ->
   let s s =
     String.sub ~start:1 ~stop:(1 + (String.length s)) (strf "\x00%s\x00" s)
   in
-  let cuts ?rev ?empty ~sep str =
-    String.Sub.cuts ?rev ?empty ~sep:(s sep) (s str)
+  let cuts ?rev ?empty ?times ~sep str =
+    String.Sub.cuts ?rev ?empty ?times ~sep:(s sep) (s str)
   in
   app_invalid ~pp:ppl (cuts ~sep:"") "";
   app_invalid ~pp:ppl (cuts ~sep:"") "123";
@@ -995,6 +995,157 @@ let cuts = test "String.Sub.cuts" @@ fun () ->
   eql (cuts ~rev ~empty:false ~sep:"aa" "aaaaa") ["a";];
   eql (cuts ~rev ~empty:true ~sep:"aa" "aaaaaa") [""; ""; ""; ""];
   eql (cuts ~rev ~empty:false ~sep:"aa" "aaaaaa") [];
+  let times = 1 in
+  eql (cuts ~times ~empty:true  ~sep:"," "") [""];
+  eql (cuts ~times ~empty:false ~sep:"," "") [];
+  eql (cuts ~times ~empty:true  ~sep:"," ",") [""; ""];
+  eql (cuts ~times ~empty:false ~sep:"," ",") [];
+  eql (cuts ~times ~empty:true  ~sep:"," ",,") [""; ","];
+  eql (cuts ~times ~empty:false ~sep:"," ",,") [","];
+  eql (cuts ~times ~empty:true  ~sep:"," ",,,") [""; ",,"];
+  eql (cuts ~times ~empty:false ~sep:"," ",,,") [",,"];
+  eql (cuts ~times ~empty:true  ~sep:"," "123") ["123"];
+  eql (cuts ~times ~empty:false ~sep:"," "123") ["123"];
+  eql (cuts ~times ~empty:true  ~sep:"," ",123") [""; "123"];
+  eql (cuts ~times ~empty:false ~sep:"," ",123") ["123"];
+  eql (cuts ~times ~empty:true  ~sep:"," "123,") ["123"; ""];
+  eql (cuts ~times ~empty:false ~sep:"," "123,") ["123"];
+  eql (cuts ~times ~empty:true  ~sep:"," "1,2,3") ["1"; "2,3"];
+  eql (cuts ~times ~empty:false ~sep:"," "1,2,3") ["1"; "2,3"];
+  eql (cuts ~times ~empty:true  ~sep:"," "1, 2, 3") ["1"; " 2, 3"];
+  eql (cuts ~times ~empty:false ~sep:"," "1, 2, 3") ["1"; " 2, 3"];
+  eql (cuts ~times ~empty:true  ~sep:"," ",1,2,,3,") [""; "1,2,,3,"];
+  eql (cuts ~times ~empty:false ~sep:"," ",1,2,,3,") ["1,2,,3,"];
+  eql (cuts ~times ~empty:true  ~sep:"," ", 1, 2,, 3,")
+    [""; " 1, 2,, 3,"];
+  eql (cuts ~times ~empty:false ~sep:"," ", 1, 2,, 3,") [" 1, 2,, 3,"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "") [""];
+  eql (cuts ~times ~empty:false ~sep:"<>" "") [];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "<>") [""; ""];
+  eql (cuts ~times ~empty:false ~sep:"<>" "<>") [];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "<><>") [""; "<>"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "<><>") ["<>"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "<><><>") [""; "<><>"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "<><><>") ["<><>"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "123") [ "123" ];
+  eql (cuts ~times ~empty:false ~sep:"<>" "123") [ "123" ];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "<>123") [""; "123"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "<>123") ["123"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "123<>") ["123"; ""];
+  eql (cuts ~times ~empty:false ~sep:"<>" "123<>") ["123"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "1<>2<>3") ["1"; "2<>3"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "1<>2<>3") ["1"; "2<>3"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "1<> 2<> 3") ["1"; " 2<> 3"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "1<> 2<> 3") ["1"; " 2<> 3"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "<>1<>2<><>3<>")
+    [""; "1<>2<><>3<>"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "<>1<>2<><>3<>") ["1<>2<><>3<>";];
+  eql (cuts ~times ~empty:true  ~sep:"<>" "<> 1<> 2<><> 3<>")
+    [""; " 1<> 2<><> 3<>"];
+  eql (cuts ~times ~empty:false ~sep:"<>" "<> 1<> 2<><> 3<>")[" 1<> 2<><> 3<>"];
+  eql (cuts ~times ~empty:true  ~sep:"<>" ">>><>>>><>>>><>>>>")
+    [">>>"; ">>><>>>><>>>>" ];
+  eql (cuts ~times ~empty:false ~sep:"<>" ">>><>>>><>>>><>>>>")
+    [">>>"; ">>><>>>><>>>>" ];
+  eql (cuts ~times ~empty:true  ~sep:"<->" "<->>->") [""; ">->"];
+  eql (cuts ~times ~empty:false ~sep:"<->" "<->>->") [">->"];
+  eql (cuts ~times ~empty:true  ~sep:"aa" "aa") [""; ""];
+  eql (cuts ~times ~empty:false ~sep:"aa" "aa") [];
+  eql (cuts ~times ~empty:true  ~sep:"aa" "aaa") [""; "a"];
+  eql (cuts ~times ~empty:false ~sep:"aa" "aaa") ["a"];
+  eql (cuts ~times ~empty:true  ~sep:"aa" "aaaa") [""; "aa"];
+  eql (cuts ~times ~empty:false ~sep:"aa" "aaaa") ["aa"];
+  eql (cuts ~times ~empty:true  ~sep:"aa" "aaaaa") [""; "aaa"];
+  eql (cuts ~times ~empty:false ~sep:"aa" "aaaaa") ["aaa"];
+  eql (cuts ~times ~empty:true  ~sep:"aa" "aaaaaa") [""; "aaaa"];
+  eql (cuts ~times ~empty:false ~sep:"aa" "aaaaaa") ["aaaa"];
+
+  eql (cuts ~rev ~times ~empty:true ~sep:"," "") [""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," "") [];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," ",") [""; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," ",") [];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," ",,") [","; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," ",,") [","];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," ",,,") [",,"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," ",,,") [",,"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," "123") ["123"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," "123") ["123"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," ",123") [""; "123"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," ",123") ["123"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," "123,") ["123"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," "123,") ["123"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," "1,2,3") ["1,2"; "3"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," "1,2,3") ["1,2"; "3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," "1, 2, 3") ["1, 2"; " 3"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," "1, 2, 3") ["1, 2"; " 3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," ",1,2,,3,")
+    [",1,2,,3"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," ",1,2,,3,") [",1,2,,3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"," ", 1, 2,, 3,")
+    [", 1, 2,, 3"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"," ", 1, 2,, 3,") [", 1, 2,, 3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "") [""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "") [];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "<>") [""; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "<>") [];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "<><>") ["<>"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "<><>") ["<>"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "<><><>") ["<><>"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "<><><>") ["<><>"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "123") [ "123" ];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "123") [ "123" ];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "<>123") [""; "123"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "<>123") ["123"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "123<>") ["123"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "123<>") ["123";];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "1<>2<>3") ["1<>2"; "3"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "1<>2<>3") ["1<>2"; "3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "1<> 2<> 3") ["1<> 2"; " 3"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "1<> 2<> 3") ["1<> 2"; " 3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "<>1<>2<><>3<>")
+    ["<>1<>2<><>3"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "<>1<>2<><>3<>")
+    ["<>1<>2<><>3"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" "<> 1<> 2<><> 3<>")
+                                   ["<> 1<> 2<><> 3";""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" "<> 1<> 2<><> 3<>")
+                                   ["<> 1<> 2<><> 3";];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<>" ">>><>>>><>>>><>>>>")
+                                   [">>><>>>><>>>>"; ">>>" ];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<>" ">>><>>>><>>>><>>>>")
+                                   [">>><>>>><>>>>"; ">>>" ];
+  eql (cuts ~rev ~times ~empty:true ~sep:"<->" "<->>->") [""; ">->"];
+  eql (cuts ~rev ~times ~empty:false ~sep:"<->" "<->>->") [">->"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"aa" "aa") [""; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"aa" "aa") [];
+  eql (cuts ~rev ~times ~empty:true ~sep:"aa" "aaa") ["a"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"aa" "aaa") ["a"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"aa" "aaaa") ["aa"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"aa" "aaaa") ["aa"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"aa" "aaaaa") ["aaa"; "";];
+  eql (cuts ~rev ~times ~empty:false ~sep:"aa" "aaaaa") ["aaa"];
+  eql (cuts ~rev ~times ~empty:true ~sep:"aa" "aaaaaa") ["aaaa"; ""];
+  eql (cuts ~rev ~times ~empty:false ~sep:"aa" "aaaaaa") ["aaaa"];
+
+  eql (cuts ~times:0 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (cuts ~times:1 ~empty:true  ~sep:"," ",,,") [""; ",,"];
+  eql (cuts ~times:2 ~empty:true  ~sep:"," ",,,") [""; ""; ","];
+  eql (cuts ~times:3 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (cuts ~times:4 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (cuts ~rev ~times:0 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (cuts ~rev ~times:1 ~empty:true  ~sep:"," ",,,") [",,"; ""];
+  eql (cuts ~rev ~times:2 ~empty:true  ~sep:"," ",,,") [","; ""; ""];
+  eql (cuts ~rev ~times:3 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (cuts ~rev ~times:4 ~empty:true  ~sep:"," ",,,") [""; ""; ""; ""];
+  eql (cuts ~times:0 ~empty:false  ~sep:"," ",,,") [];
+  eql (cuts ~times:1 ~empty:false  ~sep:"," ",,,") [",,"];
+  eql (cuts ~times:2 ~empty:false  ~sep:"," ",,,") [","];
+  eql (cuts ~times:3 ~empty:false  ~sep:"," ",,,") [];
+  eql (cuts ~times:4 ~empty:false  ~sep:"," ",,,") [];
+  eql (cuts ~rev ~times:0 ~empty:false  ~sep:"," ",,,") [];
+  eql (cuts ~rev ~times:1 ~empty:false  ~sep:"," ",,,") [",,"];
+  eql (cuts ~rev ~times:2 ~empty:false  ~sep:"," ",,,") [","];
+  eql (cuts ~rev ~times:3 ~empty:false  ~sep:"," ",,,") [];
   ()
 
 let fields = test "String.Sub.fields" @@ fun () ->
