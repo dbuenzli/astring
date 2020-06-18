@@ -10,10 +10,8 @@
     module.
 
     Consult the {{!diff}differences} with the OCaml
-    {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/String.html}[String]}
-    module, the {{!port}porting guide} and a few {{!examples}examples}.
-
-    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
+    {{!Stdlib.String}[String]}
+    module, the {{!port}porting guide} and a few {{!examples}examples}. *)
 
 (** {1 String} *)
 
@@ -21,11 +19,9 @@ val strf : ('a, Format.formatter, unit, string) format4 -> 'a
 (** [strf] is {!Format.asprintf}. *)
 
 val ( ^ ) : string -> string -> string
-(** [s ^ s'] is {!String.append}. *)
+(** [s ^ s'] is {!val:String.append}. *)
 
-(** Characters (bytes in fact).
-
-    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
+(** Characters (bytes in fact). *)
 module Char : sig
 
   (** {1 Bytes} *)
@@ -58,7 +54,7 @@ module Char : sig
   (** [equal b b'] is [b = b']. *)
 
   val compare : char -> char -> int
-  (** [compare b b'] is {!Pervasives.compare}[ b b']. *)
+  (** [compare b b'] is {!Stdlib.compare}[ b b']. *)
 
   (** {1 Bytes as US-ASCII characters} *)
 
@@ -188,9 +184,7 @@ end
     Whenever possible compile your code with the [-safe-string]
     option. This module does not expose any mutable operation on
     strings and {b assumes} strings are immutable. See the
-    {{!port}porting guide}.
-
-    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
+    {{!port}porting guide}. *)
 module String : sig
 
   (** {1 String} *)
@@ -285,7 +279,7 @@ module String : sig
   (** [equal s s'] is [s = s']. *)
 
   val compare : string -> string -> int
-  (** [compare s s'] is [Pervasives.compare s s'], it compares the
+  (** [compare s s'] is [Stdlib.compare s s'], it compares the
       byte sequences of [s] and [s'] in lexicographical order. *)
 
   (** {1:extract Extracting substrings}
@@ -728,19 +722,19 @@ v}
 
     val of_bool : bool -> sub
     (** [of_bool b] is a string representation for [b]. Relies on
-        {!Pervasives.string_of_bool}. *)
+        {!Stdlib.string_of_bool}. *)
 
     val to_bool : sub -> bool option
     (** [to_bool s] is a [bool] from [s], if any. Relies on
-        {!Pervasives.bool_of_string}. *)
+        {!Stdlib.bool_of_string}. *)
 
     val of_int : int -> sub
     (** [of_int i] is a string representation for [i]. Relies on
-        {!Pervasives.string_of_int}. *)
+        {!Stdlib.string_of_int}. *)
 
     val to_int : sub -> int option
     (** [to_int] is an [int] from [s], if any. Relies on
-        {!Pervasives.int_of_string}. *)
+        {!Stdlib.int_of_string}. *)
 
     val of_nativeint : nativeint -> sub
     (** [of_nativeint i] is a string representation for [i]. Relies on
@@ -768,11 +762,11 @@ v}
 
     val of_float : float -> sub
     (** [of_float f] is a string representation for [f]. Relies on
-        {!Pervasives.string_of_float}. *)
+        {!Stdlib.string_of_float}. *)
 
     val to_float : sub -> float option
     (** [to_float s] is a [float] from [s], if any. Relies
-        on {!Pervasives.float_of_string}. *)
+        on {!Stdlib.float_of_string}. *)
 
     (** {1:fig Substring stretching graphical guide}
 
@@ -1127,19 +1121,19 @@ v} *)
 
   val of_bool : bool -> string
   (** [of_bool b] is a string representation for [b]. Relies on
-      {!Pervasives.string_of_bool}. *)
+      {!Stdlib.string_of_bool}. *)
 
   val to_bool : string -> bool option
   (** [to_bool s] is a [bool] from [s], if any. Relies on
-      {!Pervasives.bool_of_string}. *)
+      {!Stdlib.bool_of_string}. *)
 
   val of_int : int -> string
   (** [of_int i] is a string representation for [i]. Relies on
-      {!Pervasives.string_of_int}. *)
+      {!Stdlib.string_of_int}. *)
 
   val to_int : string -> int option
   (** [to_int] is an [int] from [s], if any. Relies on
-      {!Pervasives.int_of_string}. *)
+      {!Stdlib.int_of_string}. *)
 
   val of_nativeint : nativeint -> string
   (** [of_nativeint i] is a string representation for [i]. Relies on
@@ -1167,19 +1161,17 @@ v} *)
 
   val of_float : float -> string
   (** [of_float f] is a string representation for [f]. Relies on
-      {!Pervasives.string_of_float}. *)
+      {!Stdlib.string_of_float}. *)
 
   val to_float : string -> float option
   (** [to_float s] is a [float] from [s], if any. Relies
-      on {!Pervasives.float_of_string}. *)
+      on {!Stdlib.float_of_string}. *)
 end
 
 (** {1:diff Differences with the OCaml [String] module}
 
     First note that it is not a goal of {!Astring} to maintain
-    compatibility with the OCaml
-    {{:http://caml.inria.fr/pub/docs/manual-ocaml/libref/String.html}
-    [String]} module.
+    compatibility with the OCaml {{!Stdlib.String}[String]} module.
 
     In [Astring]:
     {ul

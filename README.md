@@ -17,7 +17,6 @@ Astring depends only on the OCaml standard library. It is distributed
 under the ISC license.
 
 Home page: http://erratique.ch/software/astring  
-Contact: Daniel Bünzli `<daniel.buenzl i@erratique.ch>`
 
 ## Installation
 
