@@ -1,5 +1,7 @@
+v0.8.4 2020-06-18 Zagreb
+------------------------
 
-- Handle `Pervasives` deprecraction.
+- Handle `Pervasives`'s deprecation.
 - Require OCaml 4.05
 - Add conversions to/from Stdlib sets and maps. Thanks 
   to Hezekiah M. Carty for the patch.

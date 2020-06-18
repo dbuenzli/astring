@@ -1,6 +1,6 @@
 description = "Alternative String module for OCaml"
 version = "%%VERSION_NUM%%"
-requires = "bytes"
+requires = ""
 archive(byte) = "astring.cma"
 archive(native) = "astring.cmxa"
 plugin(byte) = "astring.cma"
