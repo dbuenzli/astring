@@ -303,10 +303,10 @@ let compare_bytes (s0, start0, stop0) (s1, start1, stop1) =
   let min_len = if len0 < len1 then len0 else len1 in
   let max_i = min_len - 1 in
   let rec loop i =
-    if i > max_i then Pervasives.compare len0 len1 else
+    if i > max_i then compare len0 len1 else
     let c0 = sunsafe_get s0 (start0 + i) in
     let c1 = sunsafe_get s1 (start1 + i) in
-    let cmp = Pervasives.compare c0 c1 in
+    let cmp = compare c0 c1 in
     if cmp <> 0 then cmp else
     loop (i + 1)
   in
@@ -317,7 +317,7 @@ let equal (s0, start0, stop0) (s1, start1, stop1) =
   if s0 != s1 then invalid_arg err_base else
   eq_pos start0 start1 && eq_pos stop0 stop1
 
-let compare_pos : int -> int -> int = Pervasives.compare
+let compare_pos : int -> int -> int = compare
 let compare (s0, start0, stop0) (s1, start1, stop1) =
   if s0 != s1 then invalid_arg err_base else
   let c = compare_pos start0 start1 in
