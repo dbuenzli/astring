@@ -24,7 +24,7 @@ let hash c = Hashtbl.hash c
 (* Predicates *)
 
 let equal : t -> t -> bool = fun c0 c1 -> c0 = c1
-let compare : t -> t -> int = fun c0 c1 -> Pervasives.compare c0 c1
+let compare : t -> t -> int = fun c0 c1 -> compare c0 c1
 
 (* Bytes as US-ASCII characters *)
 
