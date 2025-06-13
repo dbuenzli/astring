@@ -38,4 +38,4 @@ or via `odig doc astring`.
 ## Sample programs
 
 If you installed Astring with `opam` sample programs are located in
-the directory `opam config var astring:doc`.
+the directory `opam var astring:doc`.
